@@ -7,7 +7,21 @@ Tutor de ajedrez basado en Stockfish
   <li>pip3 install stockfish</li>
   </ul>
 
-en GranMaster.py linea XX sustituir por ubicacion de Stockfish.<br>
-Por ejemplo, en Linux està en <i>/usr/games/stockfish</i>:<br> 
-stockfish = Stockfish("/usr/games/stockfish")
 
+### Ubicaciòn motor Stockfish
+
+#### En Linux
+En GranMaster.py, sustituir linea XX por ubicacion de Stockfish. Por ejemplo, luego de
+
+```
+which stockfish
+/usr/games/stockfish
+```
+
+declarar
+```
+stockfish = Stockfish("/usr/games/stockfish")
+```
+
+#### En Windows
+Completar
