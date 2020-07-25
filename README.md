@@ -8,7 +8,7 @@ Tutor de ajedrez basado en Stockfish
   </ul>
 
 
-### Ubicaciòn motor Stockfish
+### Ubicación motor Stockfish
 
 #### En Linux
 En GranMaster.py, sustituir linea XX por ubicacion de Stockfish. Por ejemplo, luego de
