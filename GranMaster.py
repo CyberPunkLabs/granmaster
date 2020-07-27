@@ -68,7 +68,9 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
                     blancas = random.choice(aperturas)
 
                 else:
+                    clock = time.time()
                     blancas = stockfish.get_best_move_time(Juego.dificultad)
+                    print('Jugada en {} s.'.format(time.time() - clock))
                     
                 Juego.juego.append(blancas)
                 Juego.n_movimiento += 1
