@@ -11,7 +11,7 @@
 #import pickle
 #import keyboard
 
-from CyberPunkChess_testing import Juego
+from GranMaster import Juego
 
 #opcion = input('Cargar juego? (s/n): ')
 
