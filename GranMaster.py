@@ -308,7 +308,7 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
                 continue
 
             if (opcion >= 1) & (opcion <= 30):
-                Juego.depth = opcion
+                stockfish.depth = opcion
 
                 self.imprimirGenerico('Replicante', 'Versión {}.'.format(opcion))
                 time.sleep(0.5)
