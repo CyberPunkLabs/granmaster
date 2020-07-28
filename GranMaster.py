@@ -4,7 +4,6 @@ import random
 from stockfish import Stockfish
 
 stockfish = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0})
-stockfish.set_depth(30)
 #print(stockfish.get_parameters())
 
 
@@ -68,7 +67,9 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
                     blancas = random.choice(aperturas)
 
                 else:
-                    blancas = stockfish.get_best_move_time(Juego.dificultad)
+                    clock = time.time()
+                    blancas = stockfish.get_best_move()
+                    print('Jugada en {} s.'.format(time.time() - clock))
                     
                 Juego.juego.append(blancas)
                 Juego.n_movimiento += 1
@@ -294,7 +295,7 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
 
         ### Version replicante (tiempo jugada)        
         while True:
-            self.imprimirGenerico('Versión Replicante?','(1-600)')
+            self.imprimirGenerico('Versión Replicante?','(1-30)')
 
             opcion = input()
 
@@ -306,8 +307,8 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
 
                 continue
 
-            if (opcion >= 1) & (opcion <= 600):
-                Juego.dificultad = opcion * 1000
+            if (opcion >= 1) & (opcion <= 30):
+                stockfish.depth = opcion
 
                 self.imprimirGenerico('Replicante', 'Versión {}.'.format(opcion))
                 time.sleep(0.5)
