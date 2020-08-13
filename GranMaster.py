@@ -7,6 +7,7 @@ from stockfish import Stockfish
 
 stockfish = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0})
 #print(stockfish.get_parameters())
+lcd = LCD5110()
 
 
 class Juego:
@@ -34,20 +35,21 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
     n_jugada = 1
     jugada_correcta = True
     salir = False
+    lcd_on = True
 
 
     def __init__(self):
 
-        line1 = '#' * 20
-        line2 = '##   Bienvenido   ##'
-        line3 = '##     v.0.1      ##'
-        line4 = '#' * 20
+        line1 = '#' * 5
+        line2 = '## Bienvenido ##'
+        line3 = '##   v.0.1    ##'
+        line4 = '#' * 5
 
         self.imprimirGenerico(line1, line2, line3, line4)
-        time.sleep(0.5)
+        time.sleep(2)
 
 
-        self.configuracion()           
+        #self.configuracion()           
         self.color = 'n'
 
         
@@ -115,6 +117,11 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
                 Juego.jugada_correcta = False
                 print(stockfish.get_board_visual())
 
+            elif negras == 'l':
+                lcd.backlight(self.lcd_on)
+                self.lcd_on = not self.lcd_on
+                Juego.jugada_correcta = False
+
             else:
                 self.imprimirGenerico('{} incorrecta!'.format(negras))
                 Juego.jugada_correcta = False
@@ -137,34 +144,53 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
 
         #-------------------         
 
-        line1 = '{}  [ A | S | O ]'.format(Juego.evaluacion)
-        line2 = '...{} {}.{}'.format(Juego.ultimas[0],   Juego.n_jugada - 1, Juego.ultimas[1])
-        line3 = '...{} {}.{} *'.format(Juego.ultimas[2], Juego.n_jugada - 0, Juego.ultimas[3])
-        line4 = 'Ingresa jugada...'
+        line1 = " Analisis: {}".format(Juego.evaluacion)
+        line2 = "... {} {}. {}".format(Juego.ultimas[0],   Juego.n_jugada - 1, Juego.ultimas[1])
+        line3 = "... {} {}. {}".format(Juego.ultimas[2], Juego.n_jugada - 0, Juego.ultimas[3])
+        line4 = " "
+        line5 = " "
+        line6 = "Ingresa jugada..."
+        print("{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4))
 
         lcd.cursor(1,1)
         lcd.printStr(line1)
-        lcd.cursor(2,1)
+        lcd.cursor(2, 1)
         lcd.printStr(line2)
-        lcd.cursor(3,1)
+        lcd.cursor(3, 1)
         lcd.printStr(line3)
-        lcd.cursor(4,1)
+        lcd.cursor(4, 1)
         lcd.printStr(line4)
+        lcd.cursor(5, 1)
+        lcd.printStr(line5)
+        lcd.cursor(6, 1)
+        lcd.printStr(line6)
 
-
-        print("{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4))
 
 
     ### Imprimir opciones            
     def imprimirOpciones(self):
 
-                #-------------------
-        line1 = 'Opciones     [ 0 ]'  
-        line2 = '(1)Ver (2)Analizar'
-        line3 = '(3)PGN (4)Salir'
-        line4 = '(5)¡Únete!'
+        #-------------------
+        line1 = "12345678901234567890"  
+        line2 = "(1) Ver"
+        line3 = "(2) Analizar"
+        line4 = "(3) PGN"
+        line5 = "(4) Salir"
+        line4 = "(5)¡Únete!"
 
-        print("{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4))
+        lcd.cursor(1,1)
+        lcd.printStr(line1)
+        lcd.cursor(2, 1)
+        lcd.printStr(line2)
+        lcd.cursor(3, 1)
+        lcd.printStr(line3)
+        lcd.cursor(4, 1)
+        lcd.printStr(line4)
+        lcd.cursor(5, 1)
+        lcd.printStr(line5)
+        lcd.cursor(6, 1)
+        lcd.printStr(line6)
+
 
         opcion = input()
 
@@ -173,13 +199,13 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
         
         elif opcion == '4':
             self.imprimirGenerico('Juego guardado en', "'juegos/respaldo.cpc'")
-            time.sleep(0.5)
+            time.sleep(1)
             
             Juego.salir = True
             
         else:
             self.imprimirGenerico('Por implementar...')
-            time.sleep(0.5)
+            time.sleep(1)
             
 
 
@@ -219,9 +245,9 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
 
                                    #-------------------  
             self.imprimirGenerico('Selecciona perfil:  ',
-                                  '(1)Perfil  (2)Perfil',
-                                  '(3)Perfil  (4)Perfil',
-                                  '(5)Perfil  (6)Perfil')
+                                  '(1) Perfil  (2) Perfil',
+                                  '(3) Perfil  (4) Perfil',
+                                  '(5) Perfil  (6) Perfil')
             
             
             opcion = input()
