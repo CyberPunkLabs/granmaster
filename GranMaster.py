@@ -1,6 +1,8 @@
 import time
 import pickle
 import random
+
+from lcd5110 import LCD5110
 from stockfish import Stockfish
 
 stockfish = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0})
@@ -131,11 +133,22 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
     def imprimirNegras(self):
         self.formatearJuego()
 
-                #-------------------         
+
+        #-------------------         
+
         line1 = '{}  [ A | S | O ]'.format(Juego.evaluacion)
         line2 = '...{} {}.{}'.format(Juego.ultimas[0],   Juego.n_jugada - 1, Juego.ultimas[1])
         line3 = '...{} {}.{} *'.format(Juego.ultimas[2], Juego.n_jugada - 0, Juego.ultimas[3])
         line4 = 'Ingresa jugada...'
+
+        lcd.cursor(1,1)
+        lcd.printStr(line1)
+        lcd.cursor(2,1)
+        lcd.printStr(line2)
+        lcd.cursor(3,1)
+        lcd.printStr(line3)
+        lcd.cursor(4,1)
+        lcd.printStr(line4)
 
 
         print("{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4))
