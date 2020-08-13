@@ -14,17 +14,17 @@ lcd = LCD5110()
 
 while True:
 
-    lcd.cursor(1, 1)
-    lcd.printStr(" Hello Flo!")
+    lcd.cursor(2, 1)
+    lcd.printStr(" Hello World!")
     lcd.cursor(4, 2)
-    lcd.printStr("agora.cyberpunklabs.org")
+    lcd.printStr("e-tinkers.com")
     lcd.cursor(6, 1)
     lcd.inverse(True)
     lcd.printStr("** Nov 2017 **")
     lcd.inverse(False)
     time.sleep(5)
   
-    lcd.backlight(False)
+    lcd.backlight(True)
     lcd.printImage(eTinkersLogo)
     time.sleep(5)
     lcd.backlight(False)
