@@ -174,6 +174,3 @@ class LCD5110:
         pixels = int(LCD5110.LCD_WIDTH * LCD5110.LCD_HEIGHT / 8)
         for i in range(pixels):
             self._write(1, image[i])
-
-
-
