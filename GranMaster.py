@@ -178,13 +178,22 @@ class Juego:
     ### Imprimir opciones            
     def imprimirOpciones(self):
 
+
+### OPCIONES
+# En pantalla juego
+# 1 atras 2 opciones 3 guardar
+
+# En menu
+# 1 ver 2 variante 3 analisis 4 cargar 5 salir
+
+
         #-------------------
         line1 = "OPCIONES"  
         line2 = "(1) Ver"
-        line3 = "(2) Analizar"
-        line4 = "(3) PGN"
-        line5 = "(4) Salir"
-        line6 = "(5) Unete"
+        line3 = "(2) Variante"
+        line4 = "(3) Analisis"
+        line5 = "(4) Cargar"
+        line6 = "(5) Salir" # AGREGAR "MAS OPCIONES"
 
         lcd.clear()
         lcd.cursor(1,1)
@@ -206,8 +215,9 @@ class Juego:
         if opcion == '0':
             pass
         
-        elif opcion == '4':
-            self.imprimirGenerico('Juego guardado en', "'juegos/respaldo.cpc'")
+        elif opcion == '5':
+            # IMPLEMENTAR QUE GUARDE EL JUEGO!!
+            self.imprimirGenerico('Juego guardado en', "'juegos/respaldo.gm'")
             time.sleep(1)
             
             Juego.salir = True
@@ -259,12 +269,12 @@ class Juego:
         diccionario = dict(header=Juego.header, juego=Juego.juego, pgn=[])
 
         if tipo == 'respaldo':
-            pickle.dump(diccionario, open('juegos/{}.cpc'.format(tipo), 'wb'))
+            pickle.dump(diccionario, open('juegos/{}.gm'.format(tipo), 'wb'))
 
         else:
             perfiles = ['perfil1', 'perfil2', 'perfil3', 'perfil4', 'perfil5']
 
-                                   #-------------------  
+            #-------------------  
             self.imprimirGenerico("Selecciona:", "(1) Perfil", "(2) Perfil",
                                   "(3) Perfil", "(4) Perfil", "(5) Perfil")
             
@@ -273,9 +283,35 @@ class Juego:
 
             opcion = perfiles[int(opcion) - 1]
             
-            pickle.dump(diccionario, open('juegos/{}.cpc'.format(opcion), 'wb'))
+            pickle.dump(diccionario, open('juegos/{}.gm'.format(opcion), 'wb'))
 
-            self.imprimirGenerico("Juego guardado en", "'/juegos/{}.cpc'!!".format(opcion))
+            self.imprimirGenerico("Juego guardado en", "'/juegos/{}.gm'!!".format(opcion))
+            time.sleep(2)
+
+
+    ### Cargar juego
+    def cargarJuego(self, tipo):
+
+        diccionario = dict(header=Juego.header, juego=Juego.juego, pgn=[])
+
+        if tipo == 'respaldo':
+            Juego = pickle.load(open('juegos/{}.gm'.format(tipo), 'rb'))
+
+        else:
+            perfiles = ['perfil1', 'perfil2', 'perfil3', 'perfil4', 'perfil5']
+
+            #-------------------  
+            self.imprimirGenerico("Selecciona:", "(1) Perfil", "(2) Perfil",
+                                  "(3) Perfil", "(4) Perfil", "(5) Perfil")
+            
+            
+            opcion = input()
+
+            opcion = perfiles[int(opcion) - 1]
+            
+            Juego = pickle.load(open('juegos/{}.gm'.format(opcion), 'rb'))
+
+            self.imprimirGenerico("Juego cargado", "'/juegos/{}.gm'!!".format(opcion))
             time.sleep(2)
 
 
@@ -296,7 +332,7 @@ class Juego:
 
         ### Perfil o juego nuevo
         while True:
-            self.imprimirGenerico('CyberPunkChess', line3='(1) Nuevo', line4='(2) Perfil')
+            self.imprimirGenerico('Gran Master', line3='(1) Nuevo', line4='(2) Perfil')
 
             opcion = input()
 
