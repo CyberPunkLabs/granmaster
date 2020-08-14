@@ -11,6 +11,7 @@ lcd = LCD5110()
 
 
 class Juego:
+
     ''' Llama a stockfish y efectua e imprime la jugada.
 
 [Historial]
@@ -18,16 +19,16 @@ class Juego:
 [Pendiente]
 -> Auditar la evaluacion de la jugada. Intentar actualizarla cada ej 3 s 
 
-copyleft: diogenes | cyberpunklabs@protonmail.com
 
 '''
+
     header = dict(
         evento = 'Partida CyberPunkChess',
         lugar = 'Laboratorios CyberPunk',
         fecha = '20 abril 2020',
         ronda = 1,
         jugador_blancas = 'Perfil 1',
-        jugador_negras = 'Stockfish Level {} Depth {}'.format(10, 30),
+        jugador_negras = 'Stockfish Level {} Depth {}'.format(10, 30), # DECLARARLO MAS ADELANTE !!
         resultado = '*/*')
     
     juego = []
@@ -36,17 +37,19 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
     jugada_correcta = True
     salir = False
     lcd_on = True
+    lcd.backlight(True)
 
 
     def __init__(self):
 
-        line1 = '#' * 5
-        line2 = '## Bienvenido ##'
-        line3 = '##   v.0.1    ##'
-        line4 = '#' * 5
+        line2 = '#' * 17
+        line3 = '#  Bienvenido   #'
+        line4 = '#     v.0.1     #'
+        line5 = '#' * 17
 
-        self.imprimirGenerico(line1, line2, line3, line4)
-        time.sleep(2)
+        #self.imprimirGenerico(line2=line2, line3=line3, line4=line4, line5=line5)
+        #time.sleep(2)
+
 
 
         #self.configuracion()           
@@ -65,7 +68,8 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
                 + [random.choice(['b2b3', 'g2g3', 'f2f4', 'b1c3', 'e2e3'])]
 
             if Juego.jugada_correcta:
-                self.imprimirGenerico('Replicante v{}.{}'.format(10,5), 'está pensando...')
+                self.imprimirGenerico('Replicante 0.1', 'esta pensando...')
+                time.sleep(1)
 
                 if Juego.n_jugada == 1:
                     blancas = random.choice(aperturas)
@@ -84,6 +88,7 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
                 Juego.evaluacion = evaluacion['value'] / 100
 
 
+            print(stockfish.get_board_visual())
             self.imprimirNegras()
             
 
@@ -113,10 +118,6 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
                 self.imprimirOpciones()
                 Juego.jugada_correcta = False
 
-            elif negras == 'b':
-                Juego.jugada_correcta = False
-                print(stockfish.get_board_visual())
-
             elif negras == 'l':
                 lcd.backlight(self.lcd_on)
                 self.lcd_on = not self.lcd_on
@@ -126,7 +127,7 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
                 self.imprimirGenerico('{} incorrecta!'.format(negras))
                 Juego.jugada_correcta = False
 
-                time.sleep(0.5)
+                time.sleep(2)
 
 
     ### Fin del loop principal 
@@ -140,18 +141,26 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
     ### Imprimir pantalla para negras            
     def imprimirNegras(self):
         self.formatearJuego()
+        print("n_jugada: {}".format(Juego.n_jugada))
+        print("ultimas: {}".format(Juego.ultimas))
+        print("ultima: {}".format(Juego.ultimas[1]))
 
+    
+        if Juego.n_jugada == 1:
+            line2 = " 1. {} {}".format(Juego.ultimas[0], Juego.ultimas[1])
+            line3 = " 2. {} {}".format(Juego.ultimas[2], Juego.ultimas[3])        
+        else:
+            line2 = " {}. {} {}".format(Juego.n_jugada - 1, Juego.ultimas[0], Juego.ultimas[1])
+            line3 = " {}. {} {}".format(Juego.n_jugada - 0, Juego.ultimas[2], Juego.ultimas[3])        
 
-        #-------------------         
 
         line1 = " Analisis: {}".format(Juego.evaluacion)
-        line2 = "... {} {}. {}".format(Juego.ultimas[0],   Juego.n_jugada - 1, Juego.ultimas[1])
-        line3 = "... {} {}. {}".format(Juego.ultimas[2], Juego.n_jugada - 0, Juego.ultimas[3])
         line4 = " "
-        line5 = " "
+        line5 = " " * 7 + "[ A G O ]"
         line6 = "Ingresa jugada..."
-        print("{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4))
+        print("{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4, line5, line6))
 
+        lcd.clear()
         lcd.cursor(1,1)
         lcd.printStr(line1)
         lcd.cursor(2, 1)
@@ -166,18 +175,18 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
         lcd.printStr(line6)
 
 
-
     ### Imprimir opciones            
     def imprimirOpciones(self):
 
         #-------------------
-        line1 = "12345678901234567890"  
+        line1 = "OPCIONES"  
         line2 = "(1) Ver"
         line3 = "(2) Analizar"
         line4 = "(3) PGN"
         line5 = "(4) Salir"
-        line4 = "(5)¡Únete!"
+        line6 = "(5) Unete"
 
+        lcd.clear()
         lcd.cursor(1,1)
         lcd.printStr(line1)
         lcd.cursor(2, 1)
@@ -209,12 +218,23 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
             
 
 
-    def imprimirGenerico(self, line1='', line2='', line3='', line4=''):
-        print("{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4))
-        time.sleep(0.5)
-            
+    def imprimirGenerico(self, line1=" ", line2=" ", line3=" ", line4=" ", line5=" ", line6=" "):
 
-        
+        lcd.clear()
+        lcd.cursor(1,1)
+        lcd.printStr(line1)
+        lcd.cursor(2, 1)
+        lcd.printStr(line2)
+        lcd.cursor(3, 1)
+        lcd.printStr(line3)
+        lcd.cursor(4, 1)
+        lcd.printStr(line4)
+        lcd.cursor(5, 1)
+        lcd.printStr(line5)
+        lcd.cursor(6, 1)
+        lcd.printStr(line6)
+
+
     ### Deshacer jugada
     def deshacer(self):
 
@@ -222,13 +242,15 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
             del Juego.juego[-2:]
 
             stockfish.set_position(Juego.juego)
+            evaluacion = stockfish.get_evaluation()
+            Juego.evaluacion = evaluacion['value'] / 100
 
             Juego.n_jugada     -= 1
             Juego.n_movimiento -= 2
                
         else:
-            self.imprimirGenerico('Inicio del juego !!')
-            time.sleep(0.5)
+            self.imprimirGenerico("No hay mas jugadas", "que deshacer!")
+            time.sleep(1)
 
 
     ### Guardar juego
@@ -240,14 +262,11 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
             pickle.dump(diccionario, open('juegos/{}.cpc'.format(tipo), 'wb'))
 
         else:
-            perfiles = ['perfil1', 'perfil2', 'perfil3',\
-                        'perfil4', 'perfil5', 'perfil6']
+            perfiles = ['perfil1', 'perfil2', 'perfil3', 'perfil4', 'perfil5']
 
                                    #-------------------  
-            self.imprimirGenerico('Selecciona perfil:  ',
-                                  '(1) Perfil  (2) Perfil',
-                                  '(3) Perfil  (4) Perfil',
-                                  '(5) Perfil  (6) Perfil')
+            self.imprimirGenerico("Selecciona:", "(1) Perfil", "(2) Perfil",
+                                  "(3) Perfil", "(4) Perfil", "(5) Perfil")
             
             
             opcion = input()
@@ -256,7 +275,7 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
             
             pickle.dump(diccionario, open('juegos/{}.cpc'.format(opcion), 'wb'))
 
-            self.imprimirGenerico('Juego guardado en', "'/juegos/{}.cpc'!!".format(opcion))
+            self.imprimirGenerico("Juego guardado en", "'/juegos/{}.cpc'!!".format(opcion))
             time.sleep(2)
 
 
@@ -265,19 +284,19 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
     def formatearJuego(self):
         
         if len(Juego.juego) <= 4:
-            Juego.ultimas = Juego.juego + ([' '] * (4 - len(Juego.juego)))
+            Juego.ultimas = Juego.juego + ["*"] + ([" "] * (3 - len(Juego.juego)))
 
         else:
-            Juego.ultimas = Juego.juego[-4:]
+            Juego.ultimas = Juego.juego[-3:] + ["*"]
 
             
 
-
+    ### Menu de configuracion
     def configuracion(self):
 
         ### Perfil o juego nuevo
         while True:
-            self.imprimirGenerico('CyberPunkChess', line3='(1)Juego nuevo', line4='(2)Cargar perfil')
+            self.imprimirGenerico('CyberPunkChess', line3='(1) Nuevo', line4='(2) Perfil')
 
             opcion = input()
 
@@ -285,23 +304,23 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
                 opcion = int(opcion)
             except ValueError:
                 self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(0.5)
+                time.sleep(1)
 
                 continue
 
             if opcion == 1:
                 self.imprimirGenerico('¡Juego nuevo!')
-                time.sleep(0.5)
+                time.sleep(1)
 
                 break
 
             elif opcion == 2:
                 self.imprimirGenerico('[No implementado]')
-                time.sleep(0.5)
+                time.sleep(1)
 
             else: 
                 self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(0.5)
+                time.sleep(1)
 
 
 
@@ -315,7 +334,7 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
                 opcion = int(opcion)
             except ValueError:
                 self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(0.5)
+                time.sleep(1)
 
                 continue
 
@@ -323,13 +342,13 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
                 stockfish.set_skill_level(opcion)
 
                 self.imprimirGenerico('Replicante', 'Modelo: {}.'.format(opcion))
-                time.sleep(0.5)
+                time.sleep(1)
 
                 break
 
             else:
                 self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(0.5)
+                time.sleep(1)
             
 
         ### Version replicante (tiempo jugada)        
@@ -342,7 +361,7 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
                 opcion = int(opcion)
             except ValueError:
                 self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(0.5)
+                time.sleep(1)
 
                 continue
 
@@ -350,7 +369,7 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
                 stockfish.depth = opcion
 
                 self.imprimirGenerico('Replicante', 'Versión {}.'.format(opcion))
-                time.sleep(0.5)
+                time.sleep(1)
 
                 break
 
@@ -370,7 +389,7 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
                 opcion = str(opcion)
             except ValueError:
                 self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(0.5)
+                time.sleep(1)
 
                 continue
 
@@ -379,26 +398,26 @@ copyleft: diogenes | cyberpunklabs@protonmail.com
                 opcion = random.choice(['b', 'n'])
 
                 self.imprimirGenerico('Sorteando...')
-                time.sleep(0.5)
+                time.sleep(1)
 
             
             if opcion == 'b':
                 self.color = 'b'
 
                 self.imprimirGenerico('Juegas con blancas.')
-                time.sleep(0.5)
+                time.sleep(1)
                 break
 
             elif opcion == 'n':
                 self.imprimirGenerico('Juegas con negras.')
-                time.sleep(0.5)
+                time.sleep(1)
                 break
 
             else:
                 self.imprimirGenerico('¡Opción incorrecta!')
-                time.sleep(0.5)
+                time.sleep(1)
 
 
 
         self.imprimirGenerico('Iniciando juego...')
-        time.sleep(0.5)
+        time.sleep(3)
