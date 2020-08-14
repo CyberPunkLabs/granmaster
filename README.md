@@ -11,6 +11,10 @@ pip3 install RPi-GPIO
 pip3 install spidev
 ```
 
+### Utiliza
+https://github.com/e-tinkers/LCD-5110-Raspberry-Library
+
+
 ### Tutorial librerías
 Explicacion librerías (para Arduino):<br>
 https://www.e-tinkers.com/2017/11/how-to-use-lcd-5110-pcd-8544-with-arduino/
