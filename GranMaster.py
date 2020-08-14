@@ -141,10 +141,6 @@ class Juego:
     ### Imprimir pantalla para negras            
     def imprimirNegras(self):
         self.formatearJuego()
-        print("n_jugada: {}".format(Juego.n_jugada))
-        print("ultimas: {}".format(Juego.ultimas))
-        print("ultima: {}".format(Juego.ultimas[1]))
-
     
         if Juego.n_jugada == 1:
             line2 = " 1. {} {}".format(Juego.ultimas[0], Juego.ultimas[1])
