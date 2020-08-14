@@ -1,3 +1,4 @@
+### Importa modulos requieridos por Gran Master
 import time
 import pickle
 import random
@@ -5,11 +6,15 @@ import random
 from lcd5110 import LCD5110
 from stockfish import Stockfish
 
+
+### Declara stockfish y control sobre pantalla LCD
 stockfish = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0})
 #print(stockfish.get_parameters())
 lcd = LCD5110()
 
 
+#### DEBERIA LLAMARSE PARTIDA!!
+### Clase principal
 class Juego:
 
     ''' Llama a stockfish y efectua e imprime la jugada.
@@ -22,6 +27,7 @@ class Juego:
 
 '''
 
+    ### Contruiye header con info sobre la partida (por implementar)
     header = dict(
         evento = 'Partida CyberPunkChess',
         lugar = 'Laboratorios CyberPunk',
@@ -30,7 +36,9 @@ class Juego:
         jugador_blancas = 'Perfil 1',
         jugador_negras = 'Stockfish Level {} Depth {}'.format(10, 30), # DECLARARLO MAS ADELANTE !!
         resultado = '*/*')
-    
+
+
+    ### Declara variables basicas
     juego = []
     n_movimiento = 0
     n_jugada = 1
@@ -40,6 +48,7 @@ class Juego:
     lcd.backlight(True)
 
 
+    ### Pantalla de inicio. Revisar si adecuado declararla asi
     def __init__(self):
 
         line2 = '#' * 17
@@ -47,53 +56,63 @@ class Juego:
         line4 = '#     v.0.1     #'
         line5 = '#' * 17
 
-        #self.imprimirGenerico(line2=line2, line3=line3, line4=line4, line5=line5)
-        #time.sleep(2)
 
-
-
+        ### Despliega pantallas de configuracion
         #self.configuracion()           
         self.color = 'n'
 
         
+        
+##################       Inicio del loop principal         #####################
     def jugada(self):
         if self.color == 'b':
             pass
         
-        ######################
-        ### Para las negras
-        ######################
+        
+        ### Para las negras ###
         else:
+            ### Construye arbol de aperturas de los top 10 GMs
             aperturas = ['e2e4'] * 43 + ['d2d4'] * 38 + ['g1f3'] * 10 + ['c2c4'] * 8\
                 + [random.choice(['b2b3', 'g2g3', 'f2f4', 'b1c3', 'e2e3'])]
 
+            ### Si la jugada anterior de las negras es correcta:
             if Juego.jugada_correcta:
                 self.imprimirGenerico('Replicante 0.1', 'esta pensando...')
                 time.sleep(1)
 
+                ### Si es la jugada 1, elige jugada del arbol de aperturas
                 if Juego.n_jugada == 1:
                     blancas = random.choice(aperturas)
 
+                ### Si la jugada es > 1, juega Stockfish    
                 else:
                     clock = time.time()
+
+                    ### Toma jugada de best_move dado nivel y profundidad
                     blancas = stockfish.get_best_move()
+
+                    ### Alternativamente, podria tomarla de best_move_time dado limite temporal
+                    #blancas = stockfish.get_best_move_time(2000)
                     print('Jugada en {} s.'.format(time.time() - clock))
-                    
+
+                ### Agrega la jugada al arbol del juego     
                 Juego.juego.append(blancas)
                 Juego.n_movimiento += 1
-                
-                stockfish.set_position(Juego.juego)
 
+                ### Fija posicion en el tablero y evalua la posicion
+                stockfish.set_position(Juego.juego)
                 evaluacion = stockfish.get_evaluation()
                 Juego.evaluacion = evaluacion['value'] / 100
 
-
+            ### Envia info a LCD    
+            self.imprimirNegras()            
             print(stockfish.get_board_visual())
-            self.imprimirNegras()
             
-
+            ### Espera por input de las negras
             negras = input().lower()
-
+            
+            ### Respuestas al input
+            # Si existe input y este es una jugada correcta
             if (len(negras) > 1) & (stockfish.is_move_correct(negras)):
                 Juego.juego.append(negras)
 
@@ -106,154 +125,54 @@ class Juego:
                 self.guardarJuego('respaldo')
                 self.imprimirNegras()
 
+            # Guardar juego    
             elif negras == 's':
-                self.guardarJuego('juego1')
+                self.guardarJuego('juego')
                 Juego.jugada_correcta = False
-                
+
+            # Deshacer jugada
             elif negras == 'a':
                 self.deshacer()
                 Juego.jugada_correcta = False
 
+            # Opciones
             elif negras == 'o':
                 self.imprimirOpciones()
                 Juego.jugada_correcta = False
 
+            # Encender luz    
             elif negras == 'l':
                 lcd.backlight(self.lcd_on)
                 self.lcd_on = not self.lcd_on
                 Juego.jugada_correcta = False
 
+            # Input no reconocido
             else:
                 self.imprimirGenerico('{} incorrecta!'.format(negras))
                 Juego.jugada_correcta = False
 
                 time.sleep(2)
+                
 
 
-    ### Fin del loop principal 
-    ###########################################################
-
-
-    #################
-    ### PANTALLAS ###
-    #################
-
-    ### Imprimir pantalla para negras            
-    def imprimirNegras(self):
-        self.formatearJuego()
-    
-        if Juego.n_jugada == 1:
-            line2 = " 1. {} {}".format(Juego.ultimas[0], Juego.ultimas[1])
-            line3 = " 2. {} {}".format(Juego.ultimas[2], Juego.ultimas[3])        
-        else:
-            line2 = " {}. {} {}".format(Juego.n_jugada - 1, Juego.ultimas[0], Juego.ultimas[1])
-            line3 = " {}. {} {}".format(Juego.n_jugada - 0, Juego.ultimas[2], Juego.ultimas[3])        
-
-
-        line1 = " Analisis: {}".format(Juego.evaluacion)
-        line4 = " "
-        line5 = " " * 7 + "[ A G O ]"
-        line6 = "Ingresa jugada..."
-        print("{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4, line5, line6))
-
-        lcd.clear()
-        lcd.cursor(1,1)
-        lcd.printStr(line1)
-        lcd.cursor(2, 1)
-        lcd.printStr(line2)
-        lcd.cursor(3, 1)
-        lcd.printStr(line3)
-        lcd.cursor(4, 1)
-        lcd.printStr(line4)
-        lcd.cursor(5, 1)
-        lcd.printStr(line5)
-        lcd.cursor(6, 1)
-        lcd.printStr(line6)
-
-
-    ### Imprimir opciones            
-    def imprimirOpciones(self):
-
-
-### OPCIONES
-# En pantalla juego
-# 1 atras 2 opciones 3 guardar
-
-# En menu
-# 1 ver 2 variante 3 analisis 4 cargar 5 salir
-
-
-        #-------------------
-        line1 = "OPCIONES"  
-        line2 = "(1) Ver"
-        line3 = "(2) Variante"
-        line4 = "(3) Analisis"
-        line5 = "(4) Cargar"
-        line6 = "(5) Salir" # AGREGAR "MAS OPCIONES"
-
-        lcd.clear()
-        lcd.cursor(1,1)
-        lcd.printStr(line1)
-        lcd.cursor(2, 1)
-        lcd.printStr(line2)
-        lcd.cursor(3, 1)
-        lcd.printStr(line3)
-        lcd.cursor(4, 1)
-        lcd.printStr(line4)
-        lcd.cursor(5, 1)
-        lcd.printStr(line5)
-        lcd.cursor(6, 1)
-        lcd.printStr(line6)
-
-
-        opcion = input()
-
-        if opcion == '0':
-            pass
-        
-        elif opcion == '5':
-            # IMPLEMENTAR QUE GUARDE EL JUEGO!!
-            self.imprimirGenerico('Juego guardado en', "'juegos/respaldo.gm'")
-            time.sleep(1)
-            
-            Juego.salir = True
-            
-        else:
-            self.imprimirGenerico('Por implementar...')
-            time.sleep(1)
-            
-
-
-    def imprimirGenerico(self, line1=" ", line2=" ", line3=" ", line4=" ", line5=" ", line6=" "):
-
-        lcd.clear()
-        lcd.cursor(1,1)
-        lcd.printStr(line1)
-        lcd.cursor(2, 1)
-        lcd.printStr(line2)
-        lcd.cursor(3, 1)
-        lcd.printStr(line3)
-        lcd.cursor(4, 1)
-        lcd.printStr(line4)
-        lcd.cursor(5, 1)
-        lcd.printStr(line5)
-        lcd.cursor(6, 1)
-        lcd.printStr(line6)
-
+##################               PANTALLAS              #####################
 
     ### Deshacer jugada
     def deshacer(self):
-
+        ### Si en el juego hay mas de 1 jugada:
         if len(Juego.juego) > 1:
+            # Borra las ultimas dos
             del Juego.juego[-2:]
 
+            # Fija posicion y reevalua
             stockfish.set_position(Juego.juego)
             evaluacion = stockfish.get_evaluation()
             Juego.evaluacion = evaluacion['value'] / 100
 
             Juego.n_jugada     -= 1
             Juego.n_movimiento -= 2
-               
+
+        # Si no hay jugadas suficientes para deshacer    
         else:
             self.imprimirGenerico("No hay mas jugadas", "que deshacer!")
             time.sleep(1)
@@ -261,37 +180,53 @@ class Juego:
 
     ### Guardar juego
     def guardarJuego(self, tipo):
+        # Crea diccionario con header y arbol (implementar PGN)
+        diccionario = dict(header=Juego.header, juego=Juego.juego, n_jugada=Juego.n_jugada,
+                           n_movimiento=Juego.n_movimiento, evaluacion=Juego.evaluacion,
+                           jugada_correcta=Juego.jugada_correcta, color=self.color, pgn=[])
 
-        diccionario = dict(header=Juego.header, juego=Juego.juego, pgn=[])
-
+        # Si es con opcion de grabado automatico (respaldo)
         if tipo == 'respaldo':
             pickle.dump(diccionario, open('juegos/{}.gm'.format(tipo), 'wb'))
 
+        # Si no, pregunta donde guardar el juego:
         else:
             perfiles = ['perfil1', 'perfil2', 'perfil3', 'perfil4', 'perfil5']
 
             #-------------------  
             self.imprimirGenerico("Selecciona:", "(1) Perfil", "(2) Perfil",
                                   "(3) Perfil", "(4) Perfil", "(5) Perfil")
-            
+
             
             opcion = input()
-
             opcion = perfiles[int(opcion) - 1]
             
             pickle.dump(diccionario, open('juegos/{}.gm'.format(opcion), 'wb'))
-
-            self.imprimirGenerico("Juego guardado en", "'/juegos/{}.gm'!!".format(opcion))
+            
+            self.imprimirGenerico("Guardado en", "{}.gm !!".format(opcion))
             time.sleep(2)
+
+            
 
 
     ### Cargar juego
     def cargarJuego(self, tipo):
 
-        diccionario = dict(header=Juego.header, juego=Juego.juego, pgn=[])
-
         if tipo == 'respaldo':
-            Juego = pickle.load(open('juegos/{}.gm'.format(tipo), 'rb'))
+            try:
+                diccionario = pickle.load(open('juegos/{}.gm'.format(tipo), 'rb'))
+                
+                Juego.header          = diccionario['header']
+                Juego.juego           = diccionario['juego']
+                Juego.n_jugada        = diccionario['n_jugada']
+                Juego.n_movimiento    = diccionario['n_movimiento']
+                Juego.evaluacion      = diccionario['evaluacion']
+                Juego.jugada_correcta = diccionario['jugada_correcta']
+                self.color            = diccionario['color']
+
+            except FileNotFoundError:
+                self.imprimirGenerico("respaldo.gm", "no existe...")
+                
 
         else:
             perfiles = ['perfil1', 'perfil2', 'perfil3', 'perfil4', 'perfil5']
@@ -302,13 +237,28 @@ class Juego:
             
             
             opcion = input()
-
             opcion = perfiles[int(opcion) - 1]
-            
-            Juego = pickle.load(open('juegos/{}.gm'.format(opcion), 'rb'))
 
-            self.imprimirGenerico("Juego cargado", "'/juegos/{}.gm'!!".format(opcion))
-            time.sleep(2)
+            try:
+                diccionario = pickle.load(open('juegos/{}.gm'.format(opcion), 'rb'))
+
+                Juego.header          = diccionario['header']
+                Juego.juego           = diccionario['juego']
+                Juego.n_jugada        = diccionario['n_jugada']
+                Juego.n_movimiento    = diccionario['n_movimiento']
+                Juego.evaluacion      = diccionario['evaluacion']
+                Juego.jugada_correcta = diccionario['jugada_correcta']
+                self.color            = diccionario['color']
+
+                self.imprimirGenerico("Juego cargado", "'{}.gm'!!".format(opcion))
+                
+            except FileNotFoundError:
+                self.imprimirGenerico("{}".format(opcion), "no existe...")
+                            
+
+        stockfish.set_position(Juego.juego)
+        #print(stockfish.get_board_visual())
+        time.sleep(2)
 
 
             
@@ -453,3 +403,109 @@ class Juego:
 
         self.imprimirGenerico('Iniciando juego...')
         time.sleep(3)
+
+
+    ### Imprimir pantalla para negras            
+    def imprimirNegras(self):
+        self.formatearJuego()
+    
+        if Juego.n_jugada == 1:
+            line2 = " 1. {} {}".format(Juego.ultimas[0], Juego.ultimas[1])
+            line3 = " 2. {} {}".format(Juego.ultimas[2], Juego.ultimas[3])        
+        else:
+            line2 = " {}. {} {}".format(Juego.n_jugada - 1, Juego.ultimas[0], Juego.ultimas[1])
+            line3 = " {}. {} {}".format(Juego.n_jugada - 0, Juego.ultimas[2], Juego.ultimas[3])        
+
+
+        line1 = " Analisis: {}".format(Juego.evaluacion)
+        line4 = " "
+        line5 = " " * 7 + "[ A G O ]"
+        line6 = "Ingresa jugada..."
+        print("{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4, line5, line6))
+
+        lcd.clear()
+        lcd.cursor(1,1)
+        lcd.printStr(line1)
+        lcd.cursor(2, 1)
+        lcd.printStr(line2)
+        lcd.cursor(3, 1)
+        lcd.printStr(line3)
+        lcd.cursor(4, 1)
+        lcd.printStr(line4)
+        lcd.cursor(5, 1)
+        lcd.printStr(line5)
+        lcd.cursor(6, 1)
+        lcd.printStr(line6)
+
+
+    ### Imprimir opciones            
+    def imprimirOpciones(self):
+        # 1 ver 2 variante 3 analisis 4 cargar 5 salir 6 APERTURAS
+
+
+        #-------------------
+        line1 = "OPCIONES"  
+        line2 = "(1) Ver"
+        line3 = "(2) Variante"
+        line4 = "(3) Analisis"
+        line5 = "(4) Cargar"
+        line6 = "(5) Salir" # AGREGAR "MAS OPCIONES"
+
+        lcd.clear()
+        lcd.cursor(1,1)
+        lcd.printStr(line1)
+        lcd.cursor(2, 1)
+        lcd.printStr(line2)
+        lcd.cursor(3, 1)
+        lcd.printStr(line3)
+        lcd.cursor(4, 1)
+        lcd.printStr(line4)
+        lcd.cursor(5, 1)
+        lcd.printStr(line5)
+        lcd.cursor(6, 1)
+        lcd.printStr(line6)
+
+
+        ### Espera por input
+        opcion = input()
+
+        ### Volver al juego
+        if opcion == '0':
+            pass
+
+        ### Cargar juego
+        elif opcion == '4':
+            self.cargarJuego('juego')
+            # Juego.jugada_correcta = False
+                
+        ### Salir (guarda juego en respaldo.gm)
+        elif opcion == '5':
+            # IMPLEMENTAR QUE REALMENTE GUARDE EL JUEGO!!
+            self.guardarJuego('respaldo')
+            self.imprimirGenerico('Juego guardado en', "'juegos/respaldo.gm'")
+            time.sleep(1)
+            
+            Juego.salir = True
+
+        ### Input no reconocido
+        else:
+            self.imprimirGenerico('Por implementar...')
+            time.sleep(1)
+            
+
+    ### Imprimir generico
+    def imprimirGenerico(self, line1=" ", line2=" ", line3=" ", line4=" ", line5=" ", line6=" "):
+
+        lcd.clear()
+        lcd.cursor(1,1)
+        lcd.printStr(line1)
+        lcd.cursor(2, 1)
+        lcd.printStr(line2)
+        lcd.cursor(3, 1)
+        lcd.printStr(line3)
+        lcd.cursor(4, 1)
+        lcd.printStr(line4)
+        lcd.cursor(5, 1)
+        lcd.printStr(line5)
+        lcd.cursor(6, 1)
+        lcd.printStr(line6)
