@@ -9,7 +9,7 @@ from stockfish import Stockfish
 
 ### Declara stockfish y control sobre pantalla LCD
 stockfish = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0})
-#print(stockfish.get_parameters())
+print(stockfish.get_parameters())
 lcd = LCD5110()
 
 
@@ -45,7 +45,6 @@ class Juego:
     jugada_correcta = True
     salir = False
     lcd_on = True
-    lcd.backlight(True)
 
 
     ### Pantalla de inicio. Revisar si adecuado declararla asi
@@ -61,8 +60,9 @@ class Juego:
         #self.configuracion()           
         self.color = 'n'
 
-        
-        
+        self.titilar()
+
+                
 ##################       Inicio del loop principal         #####################
     def jugada(self):
         ### Para las blancas ###
@@ -126,25 +126,25 @@ class Juego:
                 self.imprimirNegras()
 
             # Guardar juego    
-            elif negras == 's':
+            elif negras == '9':
                 self.guardarJuego('juego')
                 Juego.jugada_correcta = False
 
             # Deshacer jugada
-            elif negras == 'a':
+            elif negras == '4':
                 self.deshacer()
                 Juego.jugada_correcta = False
 
             # Opciones
-            elif negras == 'o':
+            elif negras == '7':
                 self.imprimirOpciones()
                 Juego.jugada_correcta = False
 
             # Encender luz (CAMBIAR A OPCIONES!!)   
-            elif negras == 'l':
-                lcd.backlight(self.lcd_on)
-                self.lcd_on = not self.lcd_on
-                Juego.jugada_correcta = False
+            #elif negras == 'l':
+            #    lcd.backlight(self.lcd_on)
+            #    self.lcd_on = not self.lcd_on
+            #    Juego.jugada_correcta = False
 
             # Input no reconocido
             else:
@@ -419,7 +419,7 @@ class Juego:
 
         line1 = " Analisis: {}".format(Juego.evaluacion)
         line4 = " "
-        line5 = " " * 7 + "[ A G O ]"
+        line5 = " " * 7 + "[ 4 7 9 ]"
         line6 = "Ingresa jugada..."
         print("{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4, line5, line6))
 
@@ -444,10 +444,10 @@ class Juego:
 
         #-------------------
         line1 = "OPCIONES"  
-        line2 = "(1) Volver" # Cambiar a que se pueda hacer scroll por el juego completo
-        line3 = "(2) Variante"
+        line2 = "(1) Luz" # Cambiar a que se pueda hacer scroll por el juego completo
+        line3 = "(2) Cargar"
         line4 = "(3) Analisis"
-        line5 = "(4) Cargar"
+        line5 = "(4) Variante"
         line6 = "(5) Salir" # AGREGAR "MAS OPCIONES"
 
         v = 1
@@ -492,29 +492,19 @@ class Juego:
                 if v > 5:
                     v = 1
                     
-            elif opcion == '4':
-                h += 1
-                if h > 5:
-                    h = 1
-                    
             elif opcion == '8':
                 v -= 1
                 if v < 1:
                     v = 5
                     
-            elif opcion == '6':
-                h -= 1
-                if h > 1:
-                    h = 5
-
             ### Volver al juego
-            elif opcion == 'o':
-                if v == 4:
+            elif opcion == '5':
+                if v == 3:
                     self.cargarJuego('juego')
                     volver = True
 
-                elif v == 1:
-                    volver = True
+            elif opcion == '4':
+                volver = True
 
             else:
                 self.imprimirGenerico('No reconocida...')
@@ -573,7 +563,7 @@ class Juego:
                     v                = salida[1]
                     h                = salida[2]
 
-                elif opcion == 'o':
+                elif opcion == '4':
                     break
 
             else:
@@ -613,3 +603,25 @@ class Juego:
         vector_inversion[v] = True        
         return [vector_inversion, v, h]
         
+
+    def titilar(self):
+        lcd.backlight(True)
+        time.sleep(0.2)
+        lcd.backlight(False)
+        time.sleep(0.5)
+
+        lcd.backlight(True)
+        time.sleep(0.2)
+        lcd.backlight(False)
+        time.sleep(0.5)
+
+        lcd.backlight(True)
+        time.sleep(0.2)
+        lcd.backlight(False)
+        time.sleep(1)
+
+        lcd.backlight(True)
+
+    
+
+
