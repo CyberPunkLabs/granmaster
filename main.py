@@ -6,19 +6,20 @@
 
 
 # Modules
+import os
 #import time
 #import random
 #import pickle
 #import keyboard
 
-from GranMaster import Juego
-
+from GranMaster import Partida
 #opcion = input('Cargar juego? (s/n): ')
 
-juego = Juego()
+variacion = Partida()
 
-salir = False
-while not salir:
-    juego.jugada()
+reiniciar = False
+while not reiniciar:
+    variacion.jugada()
 
-    salir = juego.salir
+    #reiniciar = variacion.salir
+    #os.system('python3 main.py')

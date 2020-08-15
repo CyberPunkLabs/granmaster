@@ -8,14 +8,14 @@ from stockfish import Stockfish
 
 
 ### Declara stockfish y control sobre pantalla LCD
-stockfish = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0})
-print(stockfish.get_parameters())
+Motor = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0})
+print(Motor.get_parameters())
 lcd = LCD5110()
 
 
 #### DEBERIA LLAMARSE PARTIDA!!
 ### Clase principal
-class Juego:
+class Partida:
 
     ''' Llama a stockfish y efectua e imprime la jugada.
 
@@ -39,14 +39,14 @@ class Juego:
 
 
     ### Declara variables basicas
-    juego = []
+    variacion = []
     n_movimiento = 0
     n_jugada = 1
     jugada_correcta = True
     salir = False
     lcd_on = True
 
-
+    
     ### Pantalla de inicio. Revisar si adecuado declararla asi
     def __init__(self):
 
@@ -60,6 +60,10 @@ class Juego:
         #self.configuracion()           
         self.color = 'n'
 
+        time.sleep(0.2)
+        lcd.backlight(False)
+        time.sleep(0.5)
+        self.imprimirGenerico(line2=line2, line3=line3, line4=line4, line5=line5, seleccion=False)
         self.titilar()
 
                 
@@ -76,12 +80,12 @@ class Juego:
                 + [random.choice(['b2b3', 'g2g3', 'f2f4', 'b1c3', 'e2e3'])]
 
             ### Si la jugada anterior de las negras es correcta:
-            if Juego.jugada_correcta:
+            if Partida.jugada_correcta:
                 self.imprimirGenerico('Replicante 0.1', 'esta pensando...')
                 time.sleep(1)
 
                 ### Si es la jugada 1, elige jugada del arbol de aperturas
-                if Juego.n_jugada == 1:
+                if Partida.n_jugada == 1:
                     blancas = random.choice(aperturas)
 
                 ### Si la jugada es > 1, juega Stockfish    
@@ -89,67 +93,65 @@ class Juego:
                     clock = time.time()
 
                     ### Toma jugada de best_move dado nivel y profundidad
-                    blancas = stockfish.get_best_move()
+                    blancas = Motor.get_best_move()
 
                     ### Alternativamente, podria tomarla de best_move_time dado limite temporal
-                    #blancas = stockfish.get_best_move_time(2000)
+                    #blancas = Motor.get_best_move_time(2000)
                     print('Jugada en {} s.'.format(time.time() - clock))
 
-                ### Agrega la jugada al arbol del juego     
-                Juego.juego.append(blancas)
-                Juego.n_movimiento += 1
+                ### Agrega la jugada al arbol del Partida     
+                Partida.variacion.append(blancas)
+                Partida.n_movimiento += 1
 
                 ### Fija posicion en el tablero y evalua la posicion
-                stockfish.set_position(Juego.juego)
-                evaluacion = stockfish.get_evaluation()
-                Juego.evaluacion = evaluacion['value'] / 100
+                Motor.set_position(Partida.variacion)
+                evaluacion = Motor.get_evaluation()
+                Partida.evaluacion = evaluacion['value'] / 100
 
             ### Envia info a LCD    
             self.imprimirNegras()            
-            print(stockfish.get_board_visual())
+            print(Motor.get_board_visual())
             
             ### Espera por input de las negras
             negras = input().lower()
             
             ### Respuestas al input
             # Si existe input y este es una jugada correcta
-            if (len(negras) > 1) & (stockfish.is_move_correct(negras)):
-                Juego.juego.append(negras)
+            if (len(negras) > 1) & (Motor.is_move_correct(negras)):
+                Partida.variacion.append(negras)
 
-                stockfish.set_position(Juego.juego)
+                Motor.set_position(Partida.variacion)
 
-                Juego.n_movimiento += 1
-                Juego.n_jugada += 1
+                Partida.n_movimiento += 1
+                Partida.n_jugada += 1
 
-                Juego.jugada_correcta = True
-                self.guardarJuego('respaldo')
+                Partida.jugada_correcta = True
+                self.guardarPartida('respaldo')
                 self.imprimirNegras()
 
-            # Guardar juego    
-            elif negras == '9':
-                self.guardarJuego('juego')
-                Juego.jugada_correcta = False
+            # Guardar Partida    
+            elif negras == '5':
+                self.guardarPartida('partida')
+                Partida.jugada_correcta = False
 
             # Deshacer jugada
             elif negras == '4':
                 self.deshacer()
-                Juego.jugada_correcta = False
+                Partida.jugada_correcta = False
 
             # Opciones
-            elif negras == '7':
+            elif negras == '3':
                 self.imprimirOpciones()
-                Juego.jugada_correcta = False
+                Partida.jugada_correcta = False
 
-            # Encender luz (CAMBIAR A OPCIONES!!)   
-            #elif negras == 'l':
-            #    lcd.backlight(self.lcd_on)
-            #    self.lcd_on = not self.lcd_on
-            #    Juego.jugada_correcta = False
-
+            # Reiniciar
+            elif negras == '9':
+                Partida.salir = True
+    
             # Input no reconocido
             else:
                 self.imprimirGenerico('{} incorrecta!'.format(negras))
-                Juego.jugada_correcta = False
+                Partida.jugada_correcta = False
 
                 time.sleep(2)
                 
@@ -157,37 +159,16 @@ class Juego:
 
 ##################               PANTALLAS              #####################
 
-    ### Deshacer jugada
-    def deshacer(self):
-        ### Si en el juego hay mas de 1 jugada:
-        if len(Juego.juego) > 1:
-            # Borra las ultimas dos
-            del Juego.juego[-2:]
-
-            # Fija posicion y reevalua
-            stockfish.set_position(Juego.juego)
-            evaluacion = stockfish.get_evaluation()
-            Juego.evaluacion = evaluacion['value'] / 100
-
-            Juego.n_jugada     -= 1
-            Juego.n_movimiento -= 2
-
-        # Si no hay jugadas suficientes para deshacer    
-        else:
-            self.imprimirGenerico("No hay mas jugadas", "que deshacer!")
-            time.sleep(1)
-
-
-    ### Guardar juego
-    def guardarJuego(self, tipo):
+    ### Guardar partida
+    def guardarPartida(self, tipo):
         # Crea diccionario con header y arbol (implementar PGN)
-        diccionario = dict(header=Juego.header, juego=Juego.juego, n_jugada=Juego.n_jugada,
-                           n_movimiento=Juego.n_movimiento, evaluacion=Juego.evaluacion,
-                           jugada_correcta=Juego.jugada_correcta, color=self.color, pgn=[])
+        diccionario = dict(header=Partida.header, variacion=Partida.variacion, n_jugada=Partida.n_jugada,
+                           n_movimiento=Partida.n_movimiento, evaluacion=Partida.evaluacion,
+                           jugada_correcta=Partida.jugada_correcta, color=self.color, pgn=[])
 
         # Si es con opcion de grabado automatico (respaldo)
         if tipo == 'respaldo':
-            pickle.dump(diccionario, open('juegos/{}.gm'.format(tipo), 'wb'))
+            pickle.dump(diccionario, open('juegos/respaldo.gm'.format(tipo), 'wb'))
 
         # Si no, pregunta donde guardar el juego:
         else:
@@ -206,22 +187,21 @@ class Juego:
             self.imprimirGenerico("Guardado en", "{}.gm !!".format(opcion))
             time.sleep(2)
 
-            
 
-
-    ### Cargar juego
-    def cargarJuego(self, tipo):
+    ### Cargar variacion
+    def cargarPartida(self, tipo):
 
         if tipo == 'respaldo':
+            print("respaldo?")
             try:
                 diccionario = pickle.load(open('juegos/{}.gm'.format(tipo), 'rb'))
                 
-                Juego.header          = diccionario['header']
-                Juego.juego           = diccionario['juego']
-                Juego.n_jugada        = diccionario['n_jugada']
-                Juego.n_movimiento    = diccionario['n_movimiento']
-                Juego.evaluacion      = diccionario['evaluacion']
-                Juego.jugada_correcta = diccionario['jugada_correcta']
+                Partida.header          = diccionario['header']
+                Partida.variacion           = diccionario['variacion']
+                Partida.n_jugada        = diccionario['n_jugada']
+                Partida.n_movimiento    = diccionario['n_movimiento']
+                Partida.evaluacion      = diccionario['evaluacion']
+                Partida.jugada_correcta = diccionario['jugada_correcta']
                 self.color            = diccionario['color']
 
             except FileNotFoundError:
@@ -235,191 +215,57 @@ class Juego:
             opcion = self.imprimirGenerico("Cargar perfil:", "(1) Perfil", "(2) Perfil",
                                   "(3) Perfil", "(4) Perfil", "(5) Perfil", seleccion=True)
             
-            
             #opcion = input()
             opcion = perfiles[int(opcion) - 1]
 
             try:
                 diccionario = pickle.load(open('juegos/{}.gm'.format(opcion), 'rb'))
 
-                Juego.header          = diccionario['header']
-                Juego.juego           = diccionario['juego']
-                Juego.n_jugada        = diccionario['n_jugada']
-                Juego.n_movimiento    = diccionario['n_movimiento']
-                Juego.evaluacion      = diccionario['evaluacion']
-                Juego.jugada_correcta = diccionario['jugada_correcta']
+                Partida.header          = diccionario['header']
+                Partida.variacion           = diccionario['variacion']
+                Partida.n_jugada        = diccionario['n_jugada']
+                Partida.n_movimiento    = diccionario['n_movimiento']
+                Partida.evaluacion      = diccionario['evaluacion']
+                Partida.jugada_correcta = diccionario['jugada_correcta']
                 self.color            = diccionario['color']
 
-                self.imprimirGenerico("Juego cargado", "'{}.gm'!!".format(opcion))
+                self.imprimirGenerico("Partida cargada", "'{}.gm'!!".format(opcion), "Arbol jugadas")
+                print('Partida cargado')
                 
             except FileNotFoundError:
                 self.imprimirGenerico("{}".format(opcion), "no existe...")
                             
 
-        stockfish.set_position(Juego.juego)
-        #print(stockfish.get_board_visual())
+        Motor.set_position(Partida.variacion)
+        #print(Motor.get_board_visual())
         time.sleep(2)
 
-
             
-    ### Formatear juego
-    def formatearJuego(self):
+    ### Formatear Partida
+    def formatearPartida(self):
         
-        if len(Juego.juego) <= 4:
-            Juego.ultimas = Juego.juego + ["*"] + ([" "] * (3 - len(Juego.juego)))
+        if len(Partida.variacion) <= 4:
+            Partida.ultimas = Partida.variacion + ["*"] + ([" "] * (3 - len(Partida.variacion)))
 
         else:
-            Juego.ultimas = Juego.juego[-3:] + ["*"]
-
-            
-
-    ### Menu de configuracion
-    def configuracion(self):
-
-        ### Perfil o juego nuevo
-        while True:
-            self.imprimirGenerico('Gran Master', line3='(1) Nuevo', line4='(2) Perfil')
-
-            opcion = input()
-
-            try:
-                opcion = int(opcion)
-            except ValueError:
-                self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(1)
-
-                continue
-
-            if opcion == 1:
-                self.imprimirGenerico('¡Juego nuevo!')
-                time.sleep(1)
-
-                break
-
-            elif opcion == 2:
-                self.imprimirGenerico('[No implementado]')
-                time.sleep(1)
-
-            else: 
-                self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(1)
-
-
-
-        ### Inteligencia UCI (Modelo replicante)
-        while True:
-            self.imprimirGenerico('Modelo Replicante?', '(1-20)')
-
-            opcion = input()
-
-            try:
-                opcion = int(opcion)
-            except ValueError:
-                self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(1)
-
-                continue
-
-            if (opcion >= 1) & (opcion <= 20):
-                stockfish.set_skill_level(opcion)
-
-                self.imprimirGenerico('Replicante', 'Modelo: {}.'.format(opcion))
-                time.sleep(1)
-
-                break
-
-            else:
-                self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(1)
-            
-
-        ### Version replicante (tiempo jugada)        
-        while True:
-            self.imprimirGenerico('Versión Replicante?','(1-30)')
-
-            opcion = input()
-
-            try:
-                opcion = int(opcion)
-            except ValueError:
-                self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(1)
-
-                continue
-
-            if (opcion >= 1) & (opcion <= 30):
-                stockfish.depth = opcion
-
-                self.imprimirGenerico('Replicante', 'Versión {}.'.format(opcion))
-                time.sleep(1)
-
-                break
-
-            else:
-                self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(0.5)
-            
-
-
-        ### Color        
-        while True:
-            self.imprimirGenerico('Elige color', '(b) Blancas', '(n) Negras', '(a) Aleatorio')
-
-            opcion = input().lower()
-
-            try:
-                opcion = str(opcion)
-            except ValueError:
-                self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(1)
-
-                continue
-
-
-            if opcion == 'a':
-                opcion = random.choice(['b', 'n'])
-
-                self.imprimirGenerico('Sorteando...')
-                time.sleep(1)
-
-            
-            if opcion == 'b':
-                self.color = 'b'
-
-                self.imprimirGenerico('Juegas con blancas.')
-                time.sleep(1)
-                break
-
-            elif opcion == 'n':
-                self.imprimirGenerico('Juegas con negras.')
-                time.sleep(1)
-                break
-
-            else:
-                self.imprimirGenerico('¡Opción incorrecta!')
-                time.sleep(1)
-
-
-
-        self.imprimirGenerico('Iniciando juego...')
-        time.sleep(3)
+            Partida.ultimas = Partida.variacion[-3:] + ["*"]
 
 
     ### Imprimir pantalla para negras            
     def imprimirNegras(self):
-        self.formatearJuego()
+        self.formatearPartida()
     
-        if Juego.n_jugada == 1:
-            line2 = " 1. {} {}".format(Juego.ultimas[0], Juego.ultimas[1])
-            line3 = " 2. {} {}".format(Juego.ultimas[2], Juego.ultimas[3])        
+        if Partida.n_jugada == 1:
+            line2 = " 1. {} {}".format(Partida.ultimas[0], Partida.ultimas[1])
+            line3 = " 2. {} {}".format(Partida.ultimas[2], Partida.ultimas[3])        
         else:
-            line2 = " {}. {} {}".format(Juego.n_jugada - 1, Juego.ultimas[0], Juego.ultimas[1])
-            line3 = " {}. {} {}".format(Juego.n_jugada - 0, Juego.ultimas[2], Juego.ultimas[3])        
+            line2 = " {}. {} {}".format(Partida.n_jugada - 1, Partida.ultimas[0], Partida.ultimas[1])
+            line3 = " {}. {} {}".format(Partida.n_jugada - 0, Partida.ultimas[2], Partida.ultimas[3])        
 
 
-        line1 = " Analisis: {}".format(Juego.evaluacion)
+        line1 = " Analisis: {}".format(Partida.evaluacion)
         line4 = " "
-        line5 = " " * 7 + "[ 4 7 9 ]"
+        line5 = " "
         line6 = "Ingresa jugada..."
         print("{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4, line5, line6))
 
@@ -444,7 +290,7 @@ class Juego:
 
         #-------------------
         line1 = "OPCIONES"  
-        line2 = "(1) Luz" # Cambiar a que se pueda hacer scroll por el juego completo
+        line2 = "(1) Luz" # Cambiar a que se pueda hacer scroll por el Partida completo
         line3 = "(2) Cargar"
         line4 = "(3) Analisis"
         line5 = "(4) Variante"
@@ -497,13 +343,22 @@ class Juego:
                 if v < 1:
                     v = 5
                     
-            ### Volver al juego
-            elif opcion == '5':
-                if v == 3:
-                    self.cargarJuego('juego')
-                    volver = True
-
+            ### Volver al Partida
             elif opcion == '4':
+                volver = True
+
+            elif opcion == '5':
+                if v == 1:
+                    self.lcd_on = not self.lcd_on
+                    lcd.backlight(self.lcd_on)
+                    
+                if v == 2:
+                    self.cargarPartida('variacion')
+                    time.sleep(2)
+
+                else:
+                    self.imprimirGenerico("No implementada...")
+
                 volver = True
 
             else:
@@ -520,6 +375,7 @@ class Juego:
         v = 1
         h = 1
         vector_inversion = [False, True, False, False, False, False]            
+        out = ' '
         
         while True:
             if seleccion == False:
@@ -566,15 +422,20 @@ class Juego:
                 elif opcion == '4':
                     break
 
+                elif opcion == '5':
+                    out = v
+                    break
+
             else:
                 break
 
-        return v
+        return out
         
 
     ### Invertir color de lineas de la pantalla
     def invertirColor(self, opcion, h=1, v=1, vector_inversion=[False, True, False, False, False, False]):
 
+        # ELIMINAR !!
         print("v = {}".format(v))
         print("h = {}".format(h))
 
@@ -597,7 +458,6 @@ class Juego:
             h -= 1
             if h > 1:
                 h = 5
-
                 
         vector_inversion = [False, False, False, False, False, False]            
         vector_inversion[v] = True        
@@ -621,7 +481,27 @@ class Juego:
         time.sleep(1)
 
         lcd.backlight(True)
-
     
+
+    ### Deshacer jugada
+    def deshacer(self):
+        ### Si en el Partida hay mas de 1 jugada:
+        if len(Partida.variacion) > 1:
+            # Borra las ultimas dos
+            del Partida.variacion[-2:]
+
+            # Fija posicion y reevalua
+            Motor.set_position(Partida.variacion)
+            evaluacion = Motor.get_evaluation()
+            Partida.evaluacion = evaluacion['value'] / 100
+
+            Partida.n_jugada     -= 1
+            Partida.n_movimiento -= 2
+
+        # Si no hay jugadas suficientes para deshacer    
+        else:
+            self.imprimirGenerico("No hay mas jugadas", "que deshacer!")
+            time.sleep(1)
+
 
 
