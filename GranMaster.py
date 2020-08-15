@@ -65,9 +65,9 @@ class Juego:
         
 ##################       Inicio del loop principal         #####################
     def jugada(self):
+        ### Para las blancas ###
         if self.color == 'b':
             pass
-        
         
         ### Para las negras ###
         else:
@@ -140,7 +140,7 @@ class Juego:
                 self.imprimirOpciones()
                 Juego.jugada_correcta = False
 
-            # Encender luz    
+            # Encender luz (CAMBIAR A OPCIONES!!)   
             elif negras == 'l':
                 lcd.backlight(self.lcd_on)
                 self.lcd_on = not self.lcd_on
@@ -194,11 +194,11 @@ class Juego:
             perfiles = ['perfil1', 'perfil2', 'perfil3', 'perfil4', 'perfil5']
 
             #-------------------  
-            self.imprimirGenerico("Selecciona:", "(1) Perfil", "(2) Perfil",
-                                  "(3) Perfil", "(4) Perfil", "(5) Perfil")
+            opcion = self.imprimirGenerico("Guardar en:", "(1) Perfil", "(2) Perfil",
+                                  "(3) Perfil", "(4) Perfil", "(5) Perfil", seleccion=True)
 
             
-            opcion = input()
+            #opcion = input()
             opcion = perfiles[int(opcion) - 1]
             
             pickle.dump(diccionario, open('juegos/{}.gm'.format(opcion), 'wb'))
@@ -232,11 +232,11 @@ class Juego:
             perfiles = ['perfil1', 'perfil2', 'perfil3', 'perfil4', 'perfil5']
 
             #-------------------  
-            self.imprimirGenerico("Selecciona:", "(1) Perfil", "(2) Perfil",
-                                  "(3) Perfil", "(4) Perfil", "(5) Perfil")
+            opcion = self.imprimirGenerico("Cargar perfil:", "(1) Perfil", "(2) Perfil",
+                                  "(3) Perfil", "(4) Perfil", "(5) Perfil", seleccion=True)
             
             
-            opcion = input()
+            #opcion = input()
             opcion = perfiles[int(opcion) - 1]
 
             try:
@@ -526,18 +526,90 @@ class Juego:
                             
 
     ### Imprimir generico
-    def imprimirGenerico(self, line1=" ", line2=" ", line3=" ", line4=" ", line5=" ", line6=" "):
+    def imprimirGenerico(self, line1=" ", line2=" ", line3=" ", line4=" ", line5=" ", line6=" ", seleccion=False):
+        v = 1
+        h = 1
+        vector_inversion = [False, True, False, False, False, False]            
+        
+        while True:
+            if seleccion == False:
+                vector_inversion = [False, False, False, False, False, False]            
 
-        lcd.clear()
-        lcd.cursor(1,1)
-        lcd.printStr(line1)
-        lcd.cursor(2, 1)
-        lcd.printStr(line2)
-        lcd.cursor(3, 1)
-        lcd.printStr(line3)
-        lcd.cursor(4, 1)
-        lcd.printStr(line4)
-        lcd.cursor(5, 1)
-        lcd.printStr(line5)
-        lcd.cursor(6, 1)
-        lcd.printStr(line6)
+            print("Vector = {}".format(vector_inversion))
+            lcd.clear()
+            
+            lcd.cursor(1,1)
+            lcd.inverse(vector_inversion[0])              
+            lcd.printStr(line1)
+
+            lcd.cursor(2, 1)
+            lcd.inverse(vector_inversion[1])
+            lcd.printStr(line2)
+
+            lcd.cursor(3, 1)
+            lcd.inverse(vector_inversion[2])
+            lcd.printStr(line3)
+
+            lcd.cursor(4, 1)
+            lcd.inverse(vector_inversion[3])
+            lcd.printStr(line4)
+
+            lcd.cursor(5, 1)
+            lcd.inverse(vector_inversion[4])
+            lcd.printStr(line5)
+
+            lcd.cursor(6, 1)
+            lcd.inverse(vector_inversion[5])
+            lcd.printStr(line6)
+            lcd.inverse(False)
+
+
+            if seleccion == True:
+                opcion = input()
+
+                if opcion in ['8', '2']:
+                    salida           = self.invertirColor(opcion, h, v, vector_inversion)
+                    vector_inversion = salida[0]
+                    v                = salida[1]
+                    h                = salida[2]
+
+                elif opcion == 'o':
+                    break
+
+            else:
+                break
+
+        return v
+        
+
+    ### Invertir color de lineas de la pantalla
+    def invertirColor(self, opcion, h=1, v=1, vector_inversion=[False, True, False, False, False, False]):
+
+        print("v = {}".format(v))
+        print("h = {}".format(h))
+
+        if opcion == '2':
+            v += 1
+            if v > 5:
+                v = 1
+                    
+        elif opcion == '4':
+            h += 1
+            if h > 5:
+                h = 1
+                    
+        elif opcion == '8':
+            v -= 1
+            if v < 1:
+                v = 5
+                    
+        elif opcion == '6':
+            h -= 1
+            if h > 1:
+                h = 5
+
+                
+        vector_inversion = [False, False, False, False, False, False]            
+        vector_inversion[v] = True        
+        return [vector_inversion, v, h]
+        
