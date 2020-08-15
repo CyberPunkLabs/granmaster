@@ -442,19 +442,18 @@ class Juego:
     def imprimirOpciones(self):
         # 1 ver 2 variante 3 analisis 4 cargar 5 salir 6 APERTURAS
 
+
         #-------------------
         line1 = "OPCIONES"  
-        line2 = "(1) Volver" # Cambiar a que se pueda hacer scroll por el juego completo
+        line2 = "(1) Ver" # Que se pueda "ver" en la pantalla principal del juego
         line3 = "(2) Variante"
         line4 = "(3) Analisis"
         line5 = "(4) Cargar"
         line6 = "(5) Salir" # AGREGAR "MAS OPCIONES"
 
-        v = 1
-        h = 1
-        vector_inversion = [False, True, False, False, False, False]
-        volver = False
-        while not volver:
+
+        while True:
+            vector_inversion = [True, False, False, False, False, False]
             lcd.clear()
             
             lcd.cursor(1,1)
@@ -480,50 +479,34 @@ class Juego:
             lcd.cursor(6, 1)
             lcd.inverse(vector_inversion[5])
             lcd.printStr(line6)
-            lcd.inverse(False)
 
-            print("v = {}".format(v))
-            print("h = {}".format(h))
+
             ### Espera por input
             opcion = input()
 
-            if opcion == '2':
-                v += 1
-                if v > 5:
-                    v = 1
-                    
-            elif opcion == '4':
-                h += 1
-                if h > 5:
-                    h = 1
-                    
-            elif opcion == '8':
-                v -= 1
-                if v < 1:
-                    v = 5
-                    
-            elif opcion == '6':
-                h -= 1
-                if h > 1:
-                    h = 5
-
             ### Volver al juego
-            elif opcion == 'o':
-                if v == 4:
-                    self.cargarJuego('juego')
-                    volver = True
+            if opcion == 'O':
+                break
 
-                elif v == 1:
-                    volver = True
-
-            else:
-                self.imprimirGenerico('No reconocida...')
+            ### Cargar juego
+            elif opcion == '4':
+                self.cargarJuego('juego')
+                # Juego.jugada_correcta = False
+                
+                ### Salir (guarda juego en respaldo.gm)
+            elif opcion == '5':
+                # IMPLEMENTAR QUE REALMENTE GUARDE EL JUEGO!!
+                self.guardarJuego('respaldo')
+                self.imprimirGenerico('Juego guardado en', "'juegos/respaldo.gm'")
                 time.sleep(1)
+            
+                Juego.salir = True
 
-            vector_inversion = [False, False, False, False, False, False]                
-            vector_inversion[v] = True
-            print(vector_inversion)
-                            
+                ### Input no reconocido
+            else:
+                self.imprimirGenerico('Por implementar...')
+                time.sleep(1)
+            
 
     ### Imprimir generico
     def imprimirGenerico(self, line1=" ", line2=" ", line3=" ", line4=" ", line5=" ", line6=" "):
