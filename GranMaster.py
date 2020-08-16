@@ -13,7 +13,6 @@ print(Motor.get_parameters())
 lcd = LCD5110()
 
 
-#### DEBERIA LLAMARSE PARTIDA!!
 ### Clase principal
 class Partida:
 
@@ -23,7 +22,11 @@ class Partida:
 
 [Pendiente]
 -> Auditar la evaluacion de la jugada. Intentar actualizarla cada ej 3 s 
-
+-> Traducir a ELO
+-> Entrenador de aperturas
+-> Que seleccione dificultad Stockfish segun ELO participante
+-> Introducir scroll por partida
+-> Introducir variantes
 
 '''
 
