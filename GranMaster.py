@@ -47,7 +47,7 @@ class Partida:
     lcd_on = True
 
     
-    ### Pantalla de inicio. Revisar si adecuado declararla asi
+    ### Pantalla de inicio. Revisar si adecuado declararla en __init__
     def __init__(self):
 
         line2 = '#' * 17
@@ -76,6 +76,12 @@ class Partida:
         ### Para las negras ###
         else:
             ### Construye arbol de aperturas de los top 10 GMs
+            # e2e4                        : 43%
+            # d2d4                        : 38%
+            # g1f3                        : 10%
+            # c2c4                        : 8%
+            # b2b3, g2g3, f2f4, b1c3, e2e3: 1%
+            
             aperturas = ['e2e4'] * 43 + ['d2d4'] * 38 + ['g1f3'] * 10 + ['c2c4'] * 8\
                 + [random.choice(['b2b3', 'g2g3', 'f2f4', 'b1c3', 'e2e3'])]
 
@@ -99,20 +105,20 @@ class Partida:
                     #blancas = Motor.get_best_move_time(2000)
                     print('Jugada en {} s.'.format(time.time() - clock))
 
-                ### Agrega la jugada al arbol del Partida     
+                ### Agrega la jugada al arbol de la partida     
                 Partida.variacion.append(blancas)
                 Partida.n_movimiento += 1
 
                 ### Fija posicion en el tablero y evalua la posicion
                 Motor.set_position(Partida.variacion)
                 evaluacion = Motor.get_evaluation()
-                Partida.evaluacion = evaluacion['value'] / 100
+                Partida.evaluacion = evaluacion['value']
 
             ### Envia info a LCD    
             self.imprimirNegras()            
             print(Motor.get_board_visual())
             
-            ### Espera por input de las negras
+            ### Espera por input de las negras y lo transforma a minusculas (para reconocimiento posterior)
             negras = input().lower()
             
             ### Respuestas al input
@@ -148,16 +154,18 @@ class Partida:
             elif negras == '9':
                 Partida.salir = True
     
-            # Input no reconocido
+            # Si la jugada es incorrecta (Motor.is_move_correct == False)
             else:
                 self.imprimirGenerico('{} incorrecta!'.format(negras))
                 Partida.jugada_correcta = False
+
+                self.titilar()
 
                 time.sleep(2)
                 
 
 
-##################               PANTALLAS              #####################
+##################               FUNCIONES              #####################
 
     ### Guardar partida
     def guardarPartida(self, tipo):
@@ -166,25 +174,26 @@ class Partida:
                            n_movimiento=Partida.n_movimiento, evaluacion=Partida.evaluacion,
                            jugada_correcta=Partida.jugada_correcta, color=self.color, pgn=[])
 
-        # Si es con opcion de grabado automatico (respaldo)
+        # Si es con opcion de grabado automatico (tipo=respaldo)
         if tipo == 'respaldo':
             pickle.dump(diccionario, open('juegos/respaldo.gm'.format(tipo), 'wb'))
 
-        # Si no, pregunta donde guardar el juego:
+        # Si no, pregunta donde guardar el juego (tipo=juego):
         else:
-            perfiles = ['perfil1', 'perfil2', 'perfil3', 'perfil4', 'perfil5']
+            perfiles = ['perfil1', 'perfil2', 'perfil3', 'perfil4']
 
-            #-------------------  
-            opcion = self.imprimirGenerico("Guardar en:", "(1) Perfil", "(2) Perfil",
-                                  "(3) Perfil", "(4) Perfil", "(5) Perfil", seleccion=True)
-
+            #-------------------
+            lista_perfiles = ["Perfil 1","Perfil 2", "Perfil 3", "Perfil 4"]
+            opcion = self.imprimirGenerico("Guardar en:", "Perfil 1", "Perfil 2",
+                                           "Perfil 3", "Perfil 4", seleccion=True)
             
-            #opcion = input()
-            opcion = perfiles[int(opcion) - 1]
+            nombre_archivo = perfiles[int(opcion) - 1]
+            nombre_perfil = lista_perfiles
+            [int(opcion) - 1]
             
-            pickle.dump(diccionario, open('juegos/{}.gm'.format(opcion), 'wb'))
+            pickle.dump(diccionario, open('juegos/{}.gm'.format(nombre_archivo), 'wb'))
             
-            self.imprimirGenerico("Guardado en", "{}.gm !!".format(opcion))
+            self.imprimirGenerico("Guardado en", "{}.gm !!".format(nombre_perfil))
             time.sleep(2)
 
 
