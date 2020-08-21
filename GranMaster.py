@@ -3,14 +3,17 @@ import time
 import pickle
 import random
 
-from lcd5110 import LCD5110
+#from lcd5110 import LCD5110
 from stockfish import Stockfish
 
 
 ### Declara stockfish y control sobre pantalla LCD
 Motor = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0})
+
+print("\n\n########### INICIO DEL JUEGO " + "############\n")
+print('Parametros de Stockfish:')
 print(Motor.get_parameters())
-lcd = LCD5110()
+#lcd = LCD5110()
 
 
 ### Clase principal
@@ -20,7 +23,7 @@ class Partida:
 
 [Historial]
 
-[Pendiente]
+[Pendientes]
 -> Auditar la evaluacion de la jugada. Intentar actualizarla cada ej 3 s 
 -> Traducir a ELO
 -> Entrenador de aperturas
@@ -42,32 +45,37 @@ class Partida:
 
 
     ### Declara variables basicas
+    aperturas = dict()
+    aperturas['top10'] = ['e2e4'] * 43 + ['d2d4'] * 38 + ['g1f3'] * 10 + ['c2c4'] * 8\
+        + [random.choice(['b2b3', 'g2g3', 'f2f4', 'b1c3', 'e2e3'])]
+    aperturas['ruy-lopez'] = ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5']
+
     variacion = []
     n_movimiento = 0
     n_jugada = 1
     jugada_correcta = True
     salir = False
-    lcd_on = True
+    #lcd_on = True
 
+    print("\n\n########### PANTALLAS DEL USUARIO " + "############\n")
     
     ### Pantalla de inicio. Revisar si adecuado declararla en __init__
     def __init__(self):
 
-        line2 = '#' * 17
-        line3 = '#  Bienvenido   #'
-        line4 = '#     v.0.1     #'
-        line5 = '#' * 17
-
+        line2 = "#" * 17
+        line3 = "#  Bienvenido   " + "#"
+        line4 = "#     v.0.1     " + "#"
+        line5 = "#" * 17
 
         ### Despliega pantallas de configuracion
         #self.configuracion()           
         self.color = 'n'
 
-        time.sleep(0.2)
-        lcd.backlight(False)
-        time.sleep(0.5)
+        #time.sleep(0.2)
+        #lcd.backlight(False)
+        #time.sleep(0.5)
         self.imprimirGenerico(line2=line2, line3=line3, line4=line4, line5=line5, seleccion=False)
-        self.titilar()
+        #self.titilar()
 
                 
 ##################       Inicio del loop principal         #####################
@@ -84,38 +92,46 @@ class Partida:
             # g1f3                        : 10%
             # c2c4                        : 8%
             # b2b3, g2g3, f2f4, b1c3, e2e3: 1%
-            
-            aperturas = ['e2e4'] * 43 + ['d2d4'] * 38 + ['g1f3'] * 10 + ['c2c4'] * 8\
-                + [random.choice(['b2b3', 'g2g3', 'f2f4', 'b1c3', 'e2e3'])]
+            tipo = 'banco' # 'banco'
 
             ### Si la jugada anterior de las negras es correcta:
             if Partida.jugada_correcta:
-                self.imprimirGenerico('Replicante 0.1', 'esta pensando...')
-                time.sleep(1)
+                if tipo == 'juego':
+                    self.imprimirGenerico('Replicante 0.1', 'esta pensando...')
+                    time.sleep(1)
+                elif tipo == 'banco':
+                    self.imprimirGenerico('Jugando:', '{}...'.format('Ruy Lopez'), '{}'.format('cerrada'))
+                    time.sleep(1)
+
 
                 ### Si es la jugada 1, elige jugada del arbol de aperturas
-                if Partida.n_jugada == 1:
-                    blancas = random.choice(aperturas)
+                if (Partida.n_jugada) == 1 & (tipo =='juego'):
+                    blancas = random.choice(Partida.aperturas['top10'])
 
-                ### Si la jugada es > 1, juega Stockfish    
+                ### Si la jugada es > 1, juega Stockfish
                 else:
                     clock = time.time()
 
                     ### Toma jugada de best_move dado nivel y profundidad
-                    blancas = Motor.get_best_move()
+                    if tipo == 'juego':
+                        blancas = Motor.get_best_move()
 
-                    ### Alternativamente, podria tomarla de best_move_time dado limite temporal
-                    #blancas = Motor.get_best_move_time(2000)
-                    print('Jugada en {} s.'.format(time.time() - clock))
+                        ### Alternativamente, podria tomarla de best_move_time dado limite temporal
+                        #blancas = Motor.get_best_move_time(2000)
+                        print('Jugada en {} s.'.format(time.time() - clock))
+                    elif tipo == 'banco':
+                        blancas = Partida.aperturas['ruy-lopez'][Partida.n_movimiento]
 
-                ### Agrega la jugada al arbol de la partida     
+                ### Agrega la jugada al arbol de la partida
                 Partida.variacion.append(blancas)
                 Partida.n_movimiento += 1
+                print("n movimiento: {}".format(Partida.n_movimiento))
 
                 ### Fija posicion en el tablero y evalua la posicion
                 Motor.set_position(Partida.variacion)
                 evaluacion = Motor.get_evaluation()
-                Partida.evaluacion = evaluacion['value']
+                Partida.evaluacion = evaluacion['value'] / 100
+
 
             ### Envia info a LCD    
             self.imprimirNegras()            
@@ -123,10 +139,22 @@ class Partida:
             
             ### Espera por input de las negras y lo transforma a minusculas (para reconocimiento posterior)
             negras = input().lower()
-            
+
+            if tipo == 'juego':
+                if (len(negras) > 1) & (Motor.is_move_correct(negras)):
+                    Partida.jugada_correcta = True
+
+            else:
+                if (len(negras) > 1) & (negras == Partida.aperturas['ruy-lopez'][Partida.n_movimiento]):
+                    Partida.jugada_correcta = True
+                else:
+                    print("Jugada incorrecta")
+                    Partida.jugada_correcta = False
+
+
             ### Respuestas al input
             # Si existe input y este es una jugada correcta
-            if (len(negras) > 1) & (Motor.is_move_correct(negras)):
+            if Partida.jugada_correcta:
                 Partida.variacion.append(negras)
 
                 Motor.set_position(Partida.variacion)
@@ -134,7 +162,6 @@ class Partida:
                 Partida.n_movimiento += 1
                 Partida.n_jugada += 1
 
-                Partida.jugada_correcta = True
                 self.guardarPartida('respaldo')
                 self.imprimirNegras()
 
@@ -162,7 +189,7 @@ class Partida:
                 self.imprimirGenerico('{} incorrecta!'.format(negras))
                 Partida.jugada_correcta = False
 
-                self.titilar()
+                #self.titilar()
 
                 time.sleep(2)
                 
@@ -204,7 +231,6 @@ class Partida:
     def cargarPartida(self, tipo):
 
         if tipo == 'respaldo':
-            print("respaldo?")
             try:
                 diccionario = pickle.load(open('juegos/{}.gm'.format(tipo), 'rb'))
                 
@@ -221,11 +247,11 @@ class Partida:
                 
 
         else:
-            perfiles = ['perfil1', 'perfil2', 'perfil3', 'perfil4', 'perfil5']
+            perfiles = ['perfil1', 'perfil2', 'perfil3', 'perfil4']
 
             #-------------------  
             opcion = self.imprimirGenerico("Cargar perfil:", "(1) Perfil", "(2) Perfil",
-                                  "(3) Perfil", "(4) Perfil", "(5) Perfil", seleccion=True)
+                                  "(3) Perfil", "(4) Perfil", seleccion=True)
             
             #opcion = input()
             opcion = perfiles[int(opcion) - 1]
@@ -281,20 +307,6 @@ class Partida:
         line6 = "Ingresa jugada..."
         print("{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4, line5, line6))
 
-        lcd.clear()
-        lcd.cursor(1,1)
-        lcd.printStr(line1)
-        lcd.cursor(2, 1)
-        lcd.printStr(line2)
-        lcd.cursor(3, 1)
-        lcd.printStr(line3)
-        lcd.cursor(4, 1)
-        lcd.printStr(line4)
-        lcd.cursor(5, 1)
-        lcd.printStr(line5)
-        lcd.cursor(6, 1)
-        lcd.printStr(line6)
-
 
     ### Imprimir opciones            
     def imprimirOpciones(self):
@@ -308,192 +320,14 @@ class Partida:
         line5 = "(4) Variante"
         line6 = "(5) Salir" # AGREGAR "MAS OPCIONES"
 
-        v = 1
-        h = 1
-        vector_inversion = [False, True, False, False, False, False]
-        volver = False
-        while not volver:
-            lcd.clear()
-            
-            lcd.cursor(1,1)
-            lcd.inverse(vector_inversion[0])              
-            lcd.printStr(line1)
+        print("{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4, line5, line6))
 
-            lcd.cursor(2, 1)
-            lcd.inverse(vector_inversion[1])
-            lcd.printStr(line2)
-
-            lcd.cursor(3, 1)
-            lcd.inverse(vector_inversion[2])
-            lcd.printStr(line3)
-
-            lcd.cursor(4, 1)
-            lcd.inverse(vector_inversion[3])
-            lcd.printStr(line4)
-
-            lcd.cursor(5, 1)
-            lcd.inverse(vector_inversion[4])
-            lcd.printStr(line5)
-
-            lcd.cursor(6, 1)
-            lcd.inverse(vector_inversion[5])
-            lcd.printStr(line6)
-            lcd.inverse(False)
-
-            print("v = {}".format(v))
-            print("h = {}".format(h))
-            ### Espera por input
-            opcion = input()
-
-            if opcion == '2':
-                v += 1
-                if v > 5:
-                    v = 1
-                    
-            elif opcion == '8':
-                v -= 1
-                if v < 1:
-                    v = 5
-                    
-            ### Volver al Partida
-            elif opcion == '4':
-                volver = True
-
-            elif opcion == '5':
-                if v == 1:
-                    self.lcd_on = not self.lcd_on
-                    lcd.backlight(self.lcd_on)
-                    
-                if v == 2:
-                    self.cargarPartida('variacion')
-                    time.sleep(2)
-
-                else:
-                    self.imprimirGenerico("No implementada...")
-
-                volver = True
-
-            else:
-                self.imprimirGenerico('No reconocida...')
-                time.sleep(1)
-
-            vector_inversion = [False, False, False, False, False, False]                
-            vector_inversion[v] = True
-            print(vector_inversion)
-                            
 
     ### Imprimir generico
     def imprimirGenerico(self, line1=" ", line2=" ", line3=" ", line4=" ", line5=" ", line6=" ", seleccion=False):
-        v = 1
-        h = 1
-        vector_inversion = [False, True, False, False, False, False]            
-        out = ' '
+        print("{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4, line5, line6))
+        time.sleep(2)
         
-        while True:
-            if seleccion == False:
-                vector_inversion = [False, False, False, False, False, False]            
-
-            print("Vector = {}".format(vector_inversion))
-            lcd.clear()
-            
-            lcd.cursor(1,1)
-            lcd.inverse(vector_inversion[0])              
-            lcd.printStr(line1)
-
-            lcd.cursor(2, 1)
-            lcd.inverse(vector_inversion[1])
-            lcd.printStr(line2)
-
-            lcd.cursor(3, 1)
-            lcd.inverse(vector_inversion[2])
-            lcd.printStr(line3)
-
-            lcd.cursor(4, 1)
-            lcd.inverse(vector_inversion[3])
-            lcd.printStr(line4)
-
-            lcd.cursor(5, 1)
-            lcd.inverse(vector_inversion[4])
-            lcd.printStr(line5)
-
-            lcd.cursor(6, 1)
-            lcd.inverse(vector_inversion[5])
-            lcd.printStr(line6)
-            lcd.inverse(False)
-
-
-            if seleccion == True:
-                opcion = input()
-
-                if opcion in ['8', '2']:
-                    salida           = self.invertirColor(opcion, h, v, vector_inversion)
-                    vector_inversion = salida[0]
-                    v                = salida[1]
-                    h                = salida[2]
-
-                elif opcion == '4':
-                    break
-
-                elif opcion == '5':
-                    out = v
-                    break
-
-            else:
-                break
-
-        return out
-        
-
-    ### Invertir color de lineas de la pantalla
-    def invertirColor(self, opcion, h=1, v=1, vector_inversion=[False, True, False, False, False, False]):
-
-        # ELIMINAR !!
-        print("v = {}".format(v))
-        print("h = {}".format(h))
-
-        if opcion == '2':
-            v += 1
-            if v > 5:
-                v = 1
-                    
-        elif opcion == '4':
-            h += 1
-            if h > 5:
-                h = 1
-                    
-        elif opcion == '8':
-            v -= 1
-            if v < 1:
-                v = 5
-                    
-        elif opcion == '6':
-            h -= 1
-            if h > 1:
-                h = 5
-                
-        vector_inversion = [False, False, False, False, False, False]            
-        vector_inversion[v] = True        
-        return [vector_inversion, v, h]
-        
-
-    def titilar(self):
-        lcd.backlight(True)
-        time.sleep(0.2)
-        lcd.backlight(False)
-        time.sleep(0.5)
-
-        lcd.backlight(True)
-        time.sleep(0.2)
-        lcd.backlight(False)
-        time.sleep(0.5)
-
-        lcd.backlight(True)
-        time.sleep(0.2)
-        lcd.backlight(False)
-        time.sleep(1)
-
-        lcd.backlight(True)
-    
 
     ### Deshacer jugada
     def deshacer(self):
