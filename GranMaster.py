@@ -45,11 +45,7 @@ class Partida:
 
 
     ### Declara variables basicas
-    aperturas = dict()
-    aperturas['top10'] = ['e2e4'] * 43 + ['d2d4'] * 38 + ['g1f3'] * 10 + ['c2c4'] * 8\
-        + [random.choice(['b2b3', 'g2g3', 'f2f4', 'b1c3', 'e2e3'])]
-    aperturas['ruy-lopez'] = ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5']
-
+    aperturas = pickle.load(open('basesdatos/libroAperturas.gm', 'rb'))
     variacion = []
     n_movimiento = 0
     n_jugada = 1
@@ -57,7 +53,7 @@ class Partida:
     salir = False
     #lcd_on = True
 
-    print("\n\n########### PANTALLAS DEL USUARIO " + "############\n")
+
     
     ### Pantalla de inicio. Revisar si adecuado declararla en __init__
     def __init__(self):
@@ -74,8 +70,25 @@ class Partida:
         #time.sleep(0.2)
         #lcd.backlight(False)
         #time.sleep(0.5)
-        self.imprimirGenerico(line2=line2, line3=line3, line4=line4, line5=line5, seleccion=False)
+        self.imprimirGenerico(line2=line2, line3=line3, line4=line4, line5=line5, seleccion=False, dwell=2)
         #self.titilar()
+
+        ### Banco o partida
+        while True:
+            opcion = input("Tipo (1) Partida (2) Banco: ")
+	    
+            if opcion == '1':
+                Partida.tipo = 'juego'
+                break
+            elif opcion == '2':
+                Partida.tipo = 'banco'
+
+                Partida.nombre_apertura = random.choice(list(Partida.aperturas.keys()))
+                Partida.apertura = Partida.aperturas[Partida.nombre_apertura]
+
+                break
+            else:
+                print('Opcion incorrecta!')
 
                 
 ##################       Inicio del loop principal         #####################
@@ -83,49 +96,44 @@ class Partida:
         ### Para las blancas ###
         if self.color == 'b':
             pass
+
         
         ### Para las negras ###
         else:
-            ### Construye arbol de aperturas de los top 10 GMs
-            # e2e4                        : 43%
-            # d2d4                        : 38%
-            # g1f3                        : 10%
-            # c2c4                        : 8%
-            # b2b3, g2g3, f2f4, b1c3, e2e3: 1%
-            tipo = 'banco' # 'banco'
 
             ### Si la jugada anterior de las negras es correcta:
             if Partida.jugada_correcta:
-                if tipo == 'juego':
-                    self.imprimirGenerico('Replicante 0.1', 'esta pensando...')
-                    time.sleep(1)
-                elif tipo == 'banco':
-                    self.imprimirGenerico('Jugando:', '{}...'.format('Ruy Lopez'), '{}'.format('cerrada'))
-                    time.sleep(1)
+                if Partida.tipo == 'juego':
+                    self.imprimirGenerico('Replicante 0.1', 'esta pensando...', dwell=1)
 
+                    if Partida.n_jugada == 1:
+                        blancas = random.choice(Partida.aperturas['top10'])
 
-                ### Si es la jugada 1, elige jugada del arbol de aperturas
-                if (Partida.n_jugada) == 1 & (tipo =='juego'):
-                    blancas = random.choice(Partida.aperturas['top10'])
+                    ### Si la jugada es > 1, juega Stockfish
+                    else:
+                        clock = time.time()
 
-                ### Si la jugada es > 1, juega Stockfish
-                else:
-                    clock = time.time()
-
-                    ### Toma jugada de best_move dado nivel y profundidad
-                    if tipo == 'juego':
+                        ### Toma jugada de best_move dado nivel y profundidad
                         blancas = Motor.get_best_move()
-
                         ### Alternativamente, podria tomarla de best_move_time dado limite temporal
                         #blancas = Motor.get_best_move_time(2000)
                         print('Jugada en {} s.'.format(time.time() - clock))
-                    elif tipo == 'banco':
-                        blancas = Partida.aperturas['ruy-lopez'][Partida.n_movimiento]
+
+
+                elif Partida.tipo == 'banco':
+                    #nombre = random.choice(list(Partida.aperturas.keys()))
+                    #apertura = aperturas[nombre]
+
+                    self.imprimirGenerico('Jugando:', '{}'.format(Partida.nombre_apertura), dwell=2)
+                    print("[CPLS] {}: {}".format(Partida.nombre_apertura, Partida.apertura))
+                    blancas = Partida.apertura[Partida.n_movimiento]
+
 
                 ### Agrega la jugada al arbol de la partida
                 Partida.variacion.append(blancas)
                 Partida.n_movimiento += 1
-                print("n movimiento: {}".format(Partida.n_movimiento))
+                print("[CPLs] n movimiento: {}".format(Partida.n_movimiento))
+
 
                 ### Fija posicion en el tablero y evalua la posicion
                 Motor.set_position(Partida.variacion)
@@ -133,22 +141,30 @@ class Partida:
                 Partida.evaluacion = evaluacion['value'] / 100
 
 
-            ### Envia info a LCD    
-            self.imprimirNegras()            
+            ### Imprime info
+            self.imprimirNegras()
+            print("[CPLs] Tablero:")
             print(Motor.get_board_visual())
-            
+
+
+            if (Partida.tipo == 'banco') & (Partida.n_movimiento == len(Partida.apertura)):
+                self.imprimirGenerico("Variacion terminada!", dwell=2)
+                Partida.salir = True
+
+
             ### Espera por input de las negras y lo transforma a minusculas (para reconocimiento posterior)
             negras = input().lower()
 
-            if tipo == 'juego':
+            if Partida.tipo == 'juego':
                 if (len(negras) > 1) & (Motor.is_move_correct(negras)):
                     Partida.jugada_correcta = True
 
+            # Para banco
             else:
-                if (len(negras) > 1) & (negras == Partida.aperturas['ruy-lopez'][Partida.n_movimiento]):
+                if (len(negras) > 1) & (negras == Partida.apertura[Partida.n_movimiento]):
                     Partida.jugada_correcta = True
                 else:
-                    print("Jugada incorrecta")
+                    self.imprimirGenerico(negras, "incorrecta...", dwell=2)
                     Partida.jugada_correcta = False
 
 
@@ -162,7 +178,13 @@ class Partida:
                 Partida.n_movimiento += 1
                 Partida.n_jugada += 1
 
-                self.guardarPartida('respaldo')
+
+                #if Partida.n_movimiento == len(Partida.aperturas['ruy-lopez']):
+                #    self.imprimirGenerico("Variacion terminada!", dwell=2)
+                #    Partida.salir = True
+
+
+                #self.guardarPartida('respaldo')
                 self.imprimirNegras()
 
             # Guardar Partida    
@@ -214,12 +236,12 @@ class Partida:
 
             #-------------------
             lista_perfiles = ["Perfil 1","Perfil 2", "Perfil 3", "Perfil 4"]
-            opcion = self.imprimirGenerico("Guardar en:", "Perfil 1", "Perfil 2",
+            self.imprimirGenerico("Guardar en:", "Perfil 1", "Perfil 2",
                                            "Perfil 3", "Perfil 4", seleccion=True)
             
+            opcion = input()
             nombre_archivo = perfiles[int(opcion) - 1]
-            nombre_perfil = lista_perfiles
-            [int(opcion) - 1]
+            nombre_perfil = lista_perfiles[int(opcion) - 1]
             
             pickle.dump(diccionario, open('juegos/{}.gm'.format(nombre_archivo), 'wb'))
             
@@ -250,32 +272,30 @@ class Partida:
             perfiles = ['perfil1', 'perfil2', 'perfil3', 'perfil4']
 
             #-------------------  
-            opcion = self.imprimirGenerico("Cargar perfil:", "(1) Perfil", "(2) Perfil",
-                                  "(3) Perfil", "(4) Perfil", seleccion=True)
+            self.imprimirGenerico("Cargar perfil:", "Perfil 1", "Perfil 2",
+                                  "Perfil 3", "Perfil 4", seleccion=False, dwell=2)
             
-            #opcion = input()
+            opcion = input()
             opcion = perfiles[int(opcion) - 1]
 
             try:
                 diccionario = pickle.load(open('juegos/{}.gm'.format(opcion), 'rb'))
 
                 Partida.header          = diccionario['header']
-                Partida.variacion           = diccionario['variacion']
+                Partida.variacion       = diccionario['variacion']
                 Partida.n_jugada        = diccionario['n_jugada']
                 Partida.n_movimiento    = diccionario['n_movimiento']
                 Partida.evaluacion      = diccionario['evaluacion']
                 Partida.jugada_correcta = diccionario['jugada_correcta']
-                self.color            = diccionario['color']
+                self.color              = diccionario['color']
 
-                self.imprimirGenerico("Partida cargada", "'{}.gm'!!".format(opcion), "Arbol jugadas")
-                print('Partida cargado')
+                self.imprimirGenerico("Partida cargada", "'{}.gm'!!".format(opcion), "Arbol jugadas", dwell=2)
+
                 
             except FileNotFoundError:
-                self.imprimirGenerico("{}".format(opcion), "no existe...")
+                self.imprimirGenerico("{}".format(opcion), "no existe...", dwell=2)
                             
-
         Motor.set_position(Partida.variacion)
-        #print(Motor.get_board_visual())
         time.sleep(2)
 
             
@@ -305,7 +325,8 @@ class Partida:
         line4 = " "
         line5 = " "
         line6 = "Ingresa jugada..."
-        print("{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4, line5, line6))
+
+        self.imprimirGenerico(line1, line2, line3, line4, line5, line6, seleccion=False)
 
 
     ### Imprimir opciones            
@@ -320,18 +341,21 @@ class Partida:
         line5 = "(4) Variante"
         line6 = "(5) Salir" # AGREGAR "MAS OPCIONES"
 
-        print("{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4, line5, line6))
+        self.imprimirGenerico(line1, line2, line3, line4, line5, line6, seleccion=False)
 
 
     ### Imprimir generico
-    def imprimirGenerico(self, line1=" ", line2=" ", line3=" ", line4=" ", line5=" ", line6=" ", seleccion=False):
-        print("{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4, line5, line6))
-        time.sleep(2)
+    def imprimirGenerico(self, line1=" ", line2=" ", line3=" ", line4=" ", line5=" ", line6=" ", seleccion=False, dwell=1):
+        print("\n########### PANTALLA DEL USUARIO " + "############")
+        print("{}\n{}\n{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4, line5, line6))
+        print("########### FIN PANTALLA DEL USUARIO " + "############\n")
+
+        time.sleep(dwell)
         
 
     ### Deshacer jugada
     def deshacer(self):
-        ### Si en el Partida hay mas de 1 jugada:
+        ### Si la partida tiene mas de 1 movimiento:
         if len(Partida.variacion) > 1:
             # Borra las ultimas dos
             del Partida.variacion[-2:]
