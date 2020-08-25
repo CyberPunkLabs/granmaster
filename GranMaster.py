@@ -57,29 +57,48 @@ class Partida:
 
         ### Despliega pantallas de configuracion
         #self.configuracion()
-        self.color = 'n'
+        self.color()
 
 
 
 ##################       Inicio del loop principal         #####################
     def jugada(self):
-        print("[CPLs] Jugada correcta? {}".format(Partida.jugada_correcta))
+        if self.color == 'blancas':
 
-        ### Si la jugada anterior de las negras es correcta:
-        self.COM()
+            ### Imprime info (para desarrolladores)
+            print("[CPLs] Tablero:")
+            print(Motor.get_board_visual())
+            self.imprimirNegras()
+            print("[CPLs] Partida: {}".format(Partida.variacion))
 
-        ### Imprime info
-        print("[CPLs] Tablero:")
-        print(Motor.get_board_visual())
-        print("[CPLs] Partida: {}".format(Partida.variacion))
+            ### Si la jugada anterior de las negras es correcta:
+            self.HUMANO()
 
-        ### Respuestas al input
-        self.HUM()
+
+            ### Respuestas al input
+            self.REPLICANTE()
+            print("[CPLs] Jugada correcta? {}".format(Partida.jugada_correcta))
+
+
+
+        else:
+            print("[CPLs] Jugada correcta? {}".format(Partida.jugada_correcta))
+
+            ### Si la jugada anterior de las negras es correcta:
+            self.REPLICANTE()
+
+            ### Imprime info (para desarrolladores)
+            print("[CPLs] Tablero:")
+            print(Motor.get_board_visual())
+            print("[CPLs] Partida: {}".format(Partida.variacion))
+
+            ### Respuestas al input
+            self.HUMANO()
 
 
 
 ##################               FUNCIONES              #####################
-    def HUM(self):
+    def HUMANO(self):
         ### Espera por input de las negras y lo transforma a minusculas (para reconocimiento posterior)
         entrada = input().lower()
 
@@ -99,7 +118,7 @@ class Partida:
             self.manipularOpciones(entrada)
 
 
-    def COM(self):
+    def REPLICANTE(self):
         if Partida.jugada_correcta:
             self.imprimirGenerico('Replicante 0.1', 'esta pensando...', dwell=1)
 
@@ -122,7 +141,7 @@ class Partida:
             print("[CPLs] n movimiento: {}".format(Partida.n_movimiento))
 
             self.evaluarPosicion()
-            self.imprimirNegras()
+            #self.imprimirNegras()
 
         ### Si la jugada no es correcta, simplementa pasa
         else:
@@ -208,6 +227,7 @@ class Partida:
         if Partida.n_jugada == 1:
             line2 = " 1. {} {}".format(Partida.ultimas[0], Partida.ultimas[1])
             line3 = " 2. {} {}".format(Partida.ultimas[2], Partida.ultimas[3])
+            Partida.evaluacion = " "
         else:
             line2 = " {}. {} {}".format(Partida.n_jugada - 1, Partida.ultimas[0], Partida.ultimas[1])
             line3 = " {}. {} {}".format(Partida.n_jugada - 0, Partida.ultimas[2], Partida.ultimas[3])
@@ -241,6 +261,31 @@ class Partida:
 
 
     ### Menu de configuracion
+    def color(self):
+        ### Inteligencia UCI (Modelo replicante)
+        while True:
+            self.imprimirGenerico('Color', '(1) Blancas', '(2) Negras', '(3) Aleatorio', '(4) Hum vs Hum', '(5) Rep vs Rep')
+            opcion = input()
+            try:
+                opcion = int(opcion)
+            except ValueError:
+                self.imprimirGenerico('Opción incorrecta!', dwell=1)
+                continue
+            if (opcion >= 1) & (opcion <= 3):
+                if opcion == 1:
+                    self.color = 'blancas'
+                elif opcion == 2:
+                    self.color = 'negras'
+                elif opcion == 3:
+                    self.color = random.choice(['blancas', 'negras'])
+
+                self.imprimirGenerico('Color', '{}.'.format(self.color), dwell=2)
+                break
+
+            else:
+                self.imprimirGenerico('Opción incorrecta!', dwell=2)
+
+
     def configuracion(self):
         ### Inteligencia UCI (Modelo replicante)
         while True:
