@@ -7,14 +7,15 @@ import random
 from stockfish import Stockfish
 
 
-### Declara stockfish y control sobre pantalla LCD
+### Declara stockfish
 Motor = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0, 'MultiPV': 5}) # Mismos valores que default
 
 print("\n\n########### INICIO DEL JUEGO " + "############\n")
-print('Parametros de Stockfish:')
+print('[CPLs] Parametros de Stockfish:')
 
+### Fija motor en simple, para hacer pruebas
 Motor.set_skill_level(1)
-Motor.depth = 5
+Motor.depth = 2
 print(Motor.get_parameters())
 #lcd = LCD5110()
 
@@ -25,6 +26,9 @@ class Partida:
     ''' Llama a stockfish y efectua e imprime la jugada.
 
 [Historial]
+20200825 -> Introduce funcionalidad de analisis modificando script de stockfish
+         -> Script de stockfish queda almacenado en la misma carpeta de GranMaster
+
 
 [Pendientes]
 -> Auditar la evaluacion de la jugada. Intentar actualizarla cada ej 3 s 
@@ -47,18 +51,19 @@ class Partida:
     salir = False
     #lcd_on = True
 
-    
+
     ### Pantalla de inicio. Revisar si adecuado declararla en __init__
     def __init__(self):
 
         ### Despliega pantallas de configuracion
-        #self.configuracion()           
+        #self.configuracion()
         self.color = 'n'
 
-                
+
+
 ##################       Inicio del loop principal         #####################
     def jugada(self):
-        print("Correcta? {}".format(Partida.jugada_correcta))
+        print("[CPLs] Jugada correcta? {}".format(Partida.jugada_correcta))
 
         ### Si la jugada anterior de las negras es correcta:
         self.COM()
@@ -68,47 +73,34 @@ class Partida:
         print(Motor.get_board_visual())
         print("[CPLs] Partida: {}".format(Partida.variacion))
 
-
         ### Respuestas al input
         self.HUM()
-        
-                
+
+
 
 ##################               FUNCIONES              #####################
-
     def HUM(self):
         ### Espera por input de las negras y lo transforma a minusculas (para reconocimiento posterior)
         entrada = input().lower()
-    
+
         # Si existe input y este es una jugada correcta
         if (len(entrada) > 1) & (Motor.is_move_correct(entrada)):
             Partida.jugada_correcta = True
             Partida.variacion.append(entrada)
+            self.evaluarPosicion()
 
-            ### Fija posicion en el tablero y evalua la posicion
-            Motor.set_position(Partida.variacion)
-            Motor.set_skill_level(20)
-            Motor.depth = 15
-
-            evaluacion = Motor.get_evaluation()
-            Partida.evaluacion = evaluacion #['value'] / 100
-
-            Motor.set_skill_level(1)
-            Motor.depth = 5
-
-
+            ### Añade movimiento y jugada (revisar)
             Partida.n_movimiento += 1
             Partida.n_jugada += 1
             #self.guardarPartida('respaldo')
-            self.imprimirNegras()
+            #self.imprimirNegras()
 
         else:
-            self.manipularOpciones(entrada)        
+            self.manipularOpciones(entrada)
 
 
     def COM(self):
         if Partida.jugada_correcta:
-        
             self.imprimirGenerico('Replicante 0.1', 'esta pensando...', dwell=1)
 
             if Partida.n_jugada == 1:
@@ -124,27 +116,37 @@ class Partida:
                 #blancas = Motor.get_best_move_time(2000)
                 print("[CPLs] Jugada en {} s.".format(time.time() - clock))
 
-
 	    ### Agrega la jugada al arbol de la partida
             Partida.variacion.append(com)
             Partida.n_movimiento += 1
             print("[CPLs] n movimiento: {}".format(Partida.n_movimiento))
 
-            ### Fija posicion en el tablero y evalua la posicion
-            Motor.set_position(Partida.variacion)
-            Motor.set_skill_level(20)
-            Motor.depth = 15
-
-            evaluacion = Motor.get_evaluation()
-            Partida.evaluacion = evaluacion #['value'] / 100
-
-            Motor.set_skill_level(1)
-            Motor.depth = 5
-
+            self.evaluarPosicion()
             self.imprimirNegras()
- 
+
+        ### Si la jugada no es correcta, simplementa pasa
         else:
             pass
+
+
+    def evaluarPosicion(self):
+        ### Mejora habilidad y evalua tablero
+        Motor.set_skill_level(20)
+        Motor.depth = 15
+
+        ### Fija posicion en el tablero
+        Motor.set_position(Partida.variacion)
+        evaluacion = Motor.get_evaluation()
+        Partida.evaluacion = evaluacion #['value'] / 100
+
+        ### Vuelve a habilidad por defecto
+        Motor.set_skill_level(1)
+        Motor.depth = 2
+
+        ### Vuelve a fijar posicion en el tablero
+        Motor.set_position(Partida.variacion)
+        evaluacion = Motor.get_evaluation()
+        Partida.evaluacion = evaluacion #['value'] / 100
 
 
 
@@ -154,30 +156,31 @@ class Partida:
         elif entrada == "a":
             print("[CPLs] Análisis:")
             Motor.set_skill_level(20)
-            Motor.depth = 10
+            Motor.depth = 15
 
             Motor.get_analysis()
             Motor.set_skill_level(1)
-            Motor.depth = 5
+            Motor.depth = 2
 
             print("\n")
 
             self.imprimirNegras()
+
         elif entrada == "4":
             self.deshacer()
-        # Si la jugada es incorrecta (Motor.is_move_correct == False)
+
+        # Si la jugada es incorrecta (Motor.is_move_correct == False ??)
         else:
-            self.imprimirGenerico('{} incorrecta!'.format(entrada))
+            self.imprimirGenerico('{} incorrecta!'.format(entrada), dwell=2)
             #self.titilar()
-            time.sleep(2)
 
         Partida.jugada_correcta = False
-            
+
 
     ### Deshacer jugada
     def deshacer(self):
         Partida.jugada_correcta = False
-        
+
         ### Si la partida tiene mas de 1 movimiento:
         if len(Partida.variacion) > 2:
             # Borra las ultimas dos
@@ -190,26 +193,24 @@ class Partida:
 
             Partida.n_jugada     -= 1
             Partida.n_movimiento -= 2
-            
-        # Si no hay jugadas suficientes para deshacer    
+
+        # Si no hay jugadas suficientes para deshacer
         else:
-            self.imprimirGenerico("No hay mas jugadas", "que deshacer!")
-            
-            time.sleep(1)
-            
+            self.imprimirGenerico("No hay mas jugadas", "que deshacer!", dwell=2)
+
         self.imprimirNegras()
 
 
-    ### Imprimir pantalla para negras            
+    ### Imprimir pantalla para negras
     def imprimirNegras(self):
         self.formatearPartida()
-    
+
         if Partida.n_jugada == 1:
             line2 = " 1. {} {}".format(Partida.ultimas[0], Partida.ultimas[1])
-            line3 = " 2. {} {}".format(Partida.ultimas[2], Partida.ultimas[3])        
+            line3 = " 2. {} {}".format(Partida.ultimas[2], Partida.ultimas[3])
         else:
             line2 = " {}. {} {}".format(Partida.n_jugada - 1, Partida.ultimas[0], Partida.ultimas[1])
-            line3 = " {}. {} {}".format(Partida.n_jugada - 0, Partida.ultimas[2], Partida.ultimas[3])        
+            line3 = " {}. {} {}".format(Partida.n_jugada - 0, Partida.ultimas[2], Partida.ultimas[3])
 
 
         line1 = " Analisis: {}".format(Partida.evaluacion)
@@ -228,7 +229,6 @@ class Partida:
         print("########### FIN PANTALLA DEL USUARIO " + "############\n")
 
         time.sleep(dwell)
-        
 
 
     ### Formatear Partida
@@ -240,9 +240,6 @@ class Partida:
             Partida.ultimas = Partida.variacion[-3:] + ["*"]
 
 
-        
-        
-        
     ### Menu de configuracion
     def configuracion(self):
         ### Inteligencia UCI (Modelo replicante)
@@ -252,36 +249,30 @@ class Partida:
             try:
                 opcion = int(opcion)
             except ValueError:
-                self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(1)
+                self.imprimirGenerico('Opción incorrecta!', dwell=1)
                 continue
             if (opcion >= 1) & (opcion <= 20):
                 Motor.set_skill_level(opcion)
-                self.imprimirGenerico('Replicante', 'Modelo: {}.'.format(opcion))
-                time.sleep(1)
+                self.imprimirGenerico('Replicante', 'Skill level: {}.'.format(opcion), dwell=1)
                 break
             else:
-                self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(1)
-            
+                self.imprimirGenerico('Opción incorrecta!', dwell=2)
 
-        ### Version replicante (profundidad jugada)        
+
+        ### Version replicante (profundidad jugada)
         while True:
-            self.imprimirGenerico('Versión Replicante?','(1-20)')
+            self.imprimirGenerico('Depth','(1-20)')
             opcion = input()
             try:
                 opcion = int(opcion)
             except ValueError:
-                self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(1)
+                self.imprimirGenerico('Opción incorrecta!', dwell=1)
                 continue
             if (opcion >= 1) & (opcion <= 20):
                 Motor.depth = opcion
-                self.imprimirGenerico('Replicante', 'Versión {}.'.format(opcion))
-                time.sleep(1)
+                self.imprimirGenerico('Replicante', 'Depth {}.'.format(opcion), dwell=1)
                 break
             else:
-                self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(0.5)
-        
-        
+                self.imprimirGenerico('Opción incorrecta!', dwell=1)
+
+
