@@ -8,13 +8,10 @@ from stockfish import Stockfish
 
 
 ### Declara stockfish y control sobre pantalla LCD
-Motor = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0, 'MultiPV': 5}) # Mismos valores que default
+Motor = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0})
 
 print("\n\n########### INICIO DEL JUEGO " + "############\n")
 print('Parametros de Stockfish:')
-
-Motor.set_skill_level(1)
-Motor.depth = 5
 print(Motor.get_parameters())
 #lcd = LCD5110()
 
@@ -85,18 +82,7 @@ class Partida:
             Partida.jugada_correcta = True
             Partida.variacion.append(entrada)
 
-            ### Fija posicion en el tablero y evalua la posicion
             Motor.set_position(Partida.variacion)
-            Motor.set_skill_level(20)
-            Motor.depth = 15
-
-            evaluacion = Motor.get_evaluation()
-            Partida.evaluacion = evaluacion #['value'] / 100
-
-            Motor.set_skill_level(1)
-            Motor.depth = 5
-
-
             Partida.n_movimiento += 1
             Partida.n_jugada += 1
             #self.guardarPartida('respaldo')
@@ -132,17 +118,11 @@ class Partida:
 
             ### Fija posicion en el tablero y evalua la posicion
             Motor.set_position(Partida.variacion)
-            Motor.set_skill_level(20)
-            Motor.depth = 15
-
             evaluacion = Motor.get_evaluation()
             Partida.evaluacion = evaluacion #['value'] / 100
-
-            Motor.set_skill_level(1)
-            Motor.depth = 5
-
+            
             self.imprimirNegras()
- 
+            
         else:
             pass
 
@@ -150,28 +130,20 @@ class Partida:
 
     def manipularOpciones(self, entrada):
         if entrada == "1245":
-            pass
-        elif entrada == "a":
-            print("[CPLs] Análisis:")
-            Motor.set_skill_level(20)
-            Motor.depth = 10
-
-            Motor.get_analysis()
-            Motor.set_skill_level(1)
-            Motor.depth = 5
-
-            print("\n")
-
-            self.imprimirNegras()
+           Partida.jugada_correcta = False
+        
         elif entrada == "4":
             self.deshacer()
+            Partida.jugada_correcta = False
+
         # Si la jugada es incorrecta (Motor.is_move_correct == False)
         else:
             self.imprimirGenerico('{} incorrecta!'.format(entrada))
-            #self.titilar()
-            time.sleep(2)
+            Partida.jugada_correcta = False
 
-        Partida.jugada_correcta = False
+            #self.titilar()
+
+            time.sleep(2)
             
 
     ### Deshacer jugada
@@ -243,45 +215,5 @@ class Partida:
         
         
         
-    ### Menu de configuracion
-    def configuracion(self):
-        ### Inteligencia UCI (Modelo replicante)
-        while True:
-            self.imprimirGenerico('Skill level', '(1-20)')
-            opcion = input()
-            try:
-                opcion = int(opcion)
-            except ValueError:
-                self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(1)
-                continue
-            if (opcion >= 1) & (opcion <= 20):
-                Motor.set_skill_level(opcion)
-                self.imprimirGenerico('Replicante', 'Modelo: {}.'.format(opcion))
-                time.sleep(1)
-                break
-            else:
-                self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(1)
-            
-
-        ### Version replicante (profundidad jugada)        
-        while True:
-            self.imprimirGenerico('Versión Replicante?','(1-20)')
-            opcion = input()
-            try:
-                opcion = int(opcion)
-            except ValueError:
-                self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(1)
-                continue
-            if (opcion >= 1) & (opcion <= 20):
-                Motor.depth = opcion
-                self.imprimirGenerico('Replicante', 'Versión {}.'.format(opcion))
-                time.sleep(1)
-                break
-            else:
-                self.imprimirGenerico('Opción incorrecta!')
-                time.sleep(0.5)
         
         
