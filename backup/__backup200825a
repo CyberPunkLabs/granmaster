@@ -8,12 +8,14 @@ from stockfish import Stockfish
 
 
 ### Declara stockfish
-Motor = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0, 'MultiPV': 4}) # Mismos valores que default
+Motor = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0, 'MultiPV': 5}) # Mismos valores que default
 
 print("\n\n########### INICIO DEL JUEGO " + "############\n")
 print('[CPLs] Parametros de Stockfish:')
 
 ### Fija motor en simple, para hacer pruebas
+Motor.set_skill_level(1)
+Motor.depth = 2
 print(Motor.get_parameters())
 #lcd = LCD5110()
 
@@ -39,17 +41,6 @@ class Partida:
 
 '''
 
-    ### Construye header con info sobre la partida (por implementar)
-    header = dict(
-        evento = 'Partida CyberPunkChess',
-        lugar = 'Laboratorios CyberPunk',
-        fecha = '20 abril 2020',
-        ronda = 1,
-        jugador_blancas = 'Perfil 1',
-        jugador_negras = 'Stockfish Level {} Depth {}'.format(10, 30), # DECLARARLO MAS ADELANTE !!
-        resultado = '*/*')
-
-
 
     ### Declara variables basicas
     aperturas = pickle.load(open('basesdatos/libroAperturas.gm', 'rb'))
@@ -66,7 +57,7 @@ class Partida:
 
         ### Despliega pantallas de configuracion
         #self.configuracion()
-        self.crearPerfil()
+        self.color()
 
 
 
@@ -79,14 +70,17 @@ class Partida:
             self.imprimirNegras()
             print("[CPLs] Partida: {}".format(Partida.variacion))
 
+            ### Si la jugada anterior de las negras es correcta:
             self.HUMANO()
+
+            ### Respuestas al input
             self.REPLICANTE()
             print("[CPLs] Jugada correcta? {}".format(Partida.jugada_correcta))
 
         else:
             print("[CPLs] Jugada correcta? {}".format(Partida.jugada_correcta))
 
-
+            ### Si la jugada anterior de las negras es correcta:
             self.REPLICANTE()
 
             ### Imprime info (para desarrolladores)
@@ -95,6 +89,7 @@ class Partida:
             self.imprimirNegras()
             print("[CPLs] Partida: {}".format(Partida.variacion))
 
+            ### Respuestas al input
             self.HUMANO()
 
 
@@ -118,8 +113,6 @@ class Partida:
 
         else:
             self.manipularOpciones(entrada)
-
-        return entrada
 
 
     def REPLICANTE(self):
@@ -152,26 +145,6 @@ class Partida:
             pass
 
 
-    def LIBRO(self, entrada):
-        if entrada == Partida.apertura[Partida.n_movimiento]:
-            self.imprimirGenerico('Jugando', 'apertura...', dwell=1)
-
-            ### Toma jugada de best_move dado nivel y profundidad
-            com = Partida.apertura[Partida.n_movimiento]
-
-	    ### Agrega la jugada al arbol de la partida
-            Partida.variacion.append(com)
-            Partida.n_movimiento += 1
-            print("[CPLs] n movimiento: {}".format(Partida.n_movimiento))
-
-            self.evaluarPosicion()
-            #self.imprimirNegras()
-
-        ### Si la jugada no es correcta, simplementa pasa
-        else:
-            pass
-
-
     def evaluarPosicion(self):
         ### Mejora habilidad y evalua tablero
         Motor.set_skill_level(20)
@@ -183,8 +156,8 @@ class Partida:
         Partida.evaluacion = evaluacion #['value'] / 100
 
         ### Vuelve a habilidad por defecto
-        Motor.set_skill_level(self.skill)
-        Motor.depth = self.depth
+        Motor.set_skill_level(1)
+        Motor.depth = 2
 
         ### Vuelve a fijar posicion en el tablero
         Motor.set_position(Partida.variacion)
@@ -199,27 +172,18 @@ class Partida:
         elif entrada == "a":
             print("[CPLs] Análisis:")
             Motor.set_skill_level(20)
-            Motor.set_depth(15)
+            Motor.depth = 15
 
-            analisis = Motor.get_analysis()
-            print(analisis)
+            Motor.get_analysis()
             Motor.set_skill_level(1)
-            Motor.set_depth(2)
+            Motor.depth = 2
 
             print("\n")
 
             self.imprimirNegras()
 
-        elif entrada == "f":
-            print("[CPLs] FEN position:")
-            print(Motor.get_fen_position())
-            print("\n")
-
         elif entrada == "4":
             self.deshacer()
-
-        elif entrada == "5":
-            self.escribirPartida(tipo='juego')
 
         # Si la jugada es incorrecta (Motor.is_move_correct == False ??)
         else:
@@ -313,42 +277,8 @@ class Partida:
 
 
     ### Menu de configuracion
-    def configuracion(self):
+    def color(self):
         ### Inteligencia UCI (Modelo replicante)
-        while True:
-            self.imprimirGenerico('Skill level', '(0-20)')
-            opcion = input()
-            try:
-                self.skill = int(opcion)
-            except ValueError:
-                self.imprimirGenerico('Opción incorrecta!', dwell=1)
-                continue
-            if (self.skill >= 0) & (self.skill <= 20):
-                Motor.set_skill_level(self.skill)
-                self.imprimirGenerico('Replicante', 'Skill level: {}.'.format(self.skill), dwell=1)
-                break
-            else:
-                self.imprimirGenerico('Opción incorrecta!', dwell=2)
-
-
-        ### Version replicante (profundidad jugada)
-        while True:
-            self.imprimirGenerico('Depth','(0-20)')
-            opcion = input()
-            try:
-                self.depth = int(opcion)
-            except ValueError:
-                self.imprimirGenerico('Opción incorrecta!', dwell=1)
-                continue
-            if (self.depth >= 0) & (self.depth <= 20):
-                Motor.set_depth(self.depth)
-                self.imprimirGenerico('Replicante', 'Depth {}.'.format(self.depth), dwell=1)
-                break
-            else:
-                self.imprimirGenerico('Opción incorrecta!', dwell=1)
-
-
-        ### Color del jugador
         while True:
             self.imprimirGenerico('Color', '(1) Blancas', '(2) Negras', '(3) Aleatorio', '(4) Hum vs Hum', '(5) Rep vs Rep')
             opcion = input()
@@ -372,110 +302,38 @@ class Partida:
                 self.imprimirGenerico('Opción incorrecta!', dwell=2)
 
 
-
-    def crearPerfil(self):
+    def configuracion(self):
+        ### Inteligencia UCI (Modelo replicante)
         while True:
-            self.imprimirGenerico('INICIO', '(1) Cargar perfil', '(2) Jugar partida', dwell=0.5)
+            self.imprimirGenerico('Skill level', '(1-20)')
             opcion = input()
             try:
                 opcion = int(opcion)
             except ValueError:
                 self.imprimirGenerico('Opción incorrecta!', dwell=1)
                 continue
-            if (opcion >= 1) & (opcion <= 2):
-                if opcion == 1:
-                    self.leerPartida(tipo='juego')
-                if opcion == 2:
-                    self.configuracion()
-
-                self.imprimirGenerico('Color', '{}.'.format(self.color), dwell=2)
+            if (opcion >= 1) & (opcion <= 20):
+                Motor.set_skill_level(opcion)
+                self.imprimirGenerico('Replicante', 'Skill level: {}.'.format(opcion), dwell=1)
                 break
-
             else:
                 self.imprimirGenerico('Opción incorrecta!', dwell=2)
 
 
-#################
-    ### Guardar juego
-    def escribirPartida(self, tipo):
-        # Crea diccionario con header y arbol (implementar PGN)
-        diccionario = dict(header=Partida.header, variacion=Partida.variacion, n_jugada=Partida.n_jugada,
-                           n_movimiento=Partida.n_movimiento, evaluacion=Partida.evaluacion,
-                           jugada_correcta=Partida.jugada_correcta, color=self.color, pgn=[])
-
-        # Si es con opcion de grabado automatico (respaldo)
-        if tipo == 'respaldo':
-            pickle.dump(diccionario, open('juegos/{}.gm'.format(tipo), 'wb'))
-
-        # Si no, pregunta donde guardar el juego:
-        else:
-            perfiles = ['perfil1', 'perfil2', 'perfil3', 'perfil4', 'perfil5']
-
-            #-------------------  
-            self.imprimirGenerico("Selecciona:", "(1) Perfil", "(2) Perfil",
-                                  "(3) Perfil", "(4) Perfil", "(5) Perfil")
-
-
+        ### Version replicante (profundidad jugada)
+        while True:
+            self.imprimirGenerico('Depth','(1-20)')
             opcion = input()
-            opcion = perfiles[int(opcion) - 1]
-
-            pickle.dump(diccionario, open('juegos/{}.gm'.format(opcion), 'wb'))
-
-            self.imprimirGenerico("Guardado en", "{}.gm !!".format(opcion))
-            time.sleep(2)
-
-
-   ### Cargar juego
-    def leerPartida(self, tipo):
-
-        if tipo == 'respaldo':
             try:
-                diccionario = pickle.load(open('juegos/{}.gm'.format(tipo), 'rb'))
-
-                Partida.header          = diccionario['header']
-                Partida.variacion       = diccionario['variacion']
-                Partida.n_jugada        = diccionario['n_jugada']
-                Partida.n_movimiento    = diccionario['n_movimiento']
-                Partida.evaluacion      = diccionario['evaluacion']
-                Partida.jugada_correcta = diccionario['jugada_correcta']
-                self.color              = diccionario['color']
-
-            except FileNotFoundError:
-                self.imprimirGenerico("respaldo.gm", "no existe...")
-
-
-        else:
-            perfiles = ['perfil1', 'perfil2', 'perfil3', 'perfil4', 'perfil5']
-
-            #-------------------  
-            self.imprimirGenerico("Selecciona:", "(1) Perfil", "(2) Perfil",
-                                  "(3) Perfil", "(4) Perfil", "(5) Perfil")
-
-
-            opcion = input()
-            opcion = perfiles[int(opcion) - 1]
-
-            try:
-                diccionario = pickle.load(open('juegos/{}.gm'.format(opcion), 'rb'))
-
-                Partida.header          = diccionario['header']
-                Partida.variacion       = diccionario['variacion']
-                Partida.n_jugada        = diccionario['n_jugada']
-                Partida.n_movimiento    = diccionario['n_movimiento']
-                Partida.evaluacion      = diccionario['evaluacion']
-                Partida.jugada_correcta = diccionario['jugada_correcta']
-                self.color              = diccionario['color']
-
-                self.imprimirGenerico("Perfil cargado", "{} !!".format(opcion))
-
-            except FileNotFoundError:
-                self.imprimirGenerico("{}".format(opcion), "no existe...")
-
-
-        Motor.set_position(Partida.variacion)
-        #print(stockfish.get_board_visual())
-        time.sleep(2)
-
-
+                opcion = int(opcion)
+            except ValueError:
+                self.imprimirGenerico('Opción incorrecta!', dwell=1)
+                continue
+            if (opcion >= 1) & (opcion <= 20):
+                Motor.depth = opcion
+                self.imprimirGenerico('Replicante', 'Depth {}.'.format(opcion), dwell=1)
+                break
+            else:
+                self.imprimirGenerico('Opción incorrecta!', dwell=1)
 
 

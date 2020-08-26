@@ -15,7 +15,7 @@ DEFAULT_STOCKFISH_PARAMS = {
     "Threads": 1,
     "Ponder": "false",
     "Hash": 16,
-    "MultiPV": 3,
+    "MultiPV": 4,
     "Skill Level": 10,
     "Move Overhead": 30,
     "Minimum Thinking Time": 20,
@@ -176,16 +176,15 @@ class Stockfish:
         last_text: str = ""
         while True:
             text = self._read_line()
-#           print("[Stockfish] {}".format(text))
             splitted_text = text.split(" ")
             if splitted_text[0] == "bestmove":
-#                print("[CPLs] {}".format(splitted_text))
                 if splitted_text[1] == "(none)":
                     return None
                 self.info = last_text
                 return splitted_text[1]
             last_text = text
 
+    ### Funcion agregada por CPLs
     def get_analysis(self) -> Optional[str]:
         """ NEW GRANMASTER FUNCTION !!
             Get the analysis of the current position on the board.
@@ -199,13 +198,35 @@ class Stockfish:
             text = self._read_line()
             print("[Stockfish] {}".format(text))
             splitted_text = text.split(" ")
-            if splitted_text[0] == "bestmove":
-                print("[CPLs] {}".format(splitted_text))
-                if splitted_text[1] == "(none)":
-                    return None
+
+            analisis = dict()
+            indice = 1
+            if splitted_text[:3] == ["info", "depth", "15"]:
+                print("[CPLs] Depth 15!!")
+                for n in range(len(splitted_text)):
+                    if splitted_text[n] == "cp":
+                        evaluacion = splitted_text[n+1]
+                        print(evaluacion)
+                        variacion = splitted_text[n+12:]
+                        print("[{}] {}".format(evaluacion, variacion))
+                        analisis[str(indice)] = {"cp": evaluacion, "variacion": variacion}
+                        indice += 1
+                    else:
+                        pass
                 self.info = last_text
-                return splitted_text[1]
-            last_text = text
+            text = last_text
+                #indice += 1
+
+            return analisis
+
+                        #return None
+            #if splitted_text[0] == "bestmove":
+            #    print("[CPLs] {}".format(splitted_text))
+            #    if splitted_text[1] == "(none)":
+            #        return None
+            #    self.info = last_text
+            #    return splitted_text[1]
+            #last_text = text
 
     def get_best_move_time(self, time: int = 1000) -> Optional[str]:
         """Get best move with current position on the board after a determined time
@@ -263,6 +284,7 @@ class Stockfish:
         self._put("position " + fen + "\n go")
         while True:
             text = self._read_line()
+            #print(text)
             splitted_text = text.split(" ")
             if splitted_text[0] == "info":
                 for n in range(len(splitted_text)):
