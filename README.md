@@ -8,9 +8,11 @@ Funciona con monitor estándar, sin requerir de pantalla LCD.
 <ul>
   <li>Configura partida nueva o carga perfil de usuario</li>
   <li>Permite configurar profundidad (0-20) y habilidad (0-20) de la máquina. Valores ~ 20 equivalen a ELO ~ 3500 (ELO Kasparov: 2500)</li>
+  <li>El código del modelo Replicante es "habilidad.profundidad" (ej "Replicante 10.8" tiene habilidad 10 y profundidad 8).
   <li>Perfil de usuario permite escribir (e) y leer (l) partidas</li>
-  <li>Función deshacer (d) permite deshacer jugadas. (t) y permiten ver el tablero y , respectivamente.</li>
-  <li>Función análisis genera análisis de Stockfish de 4 ramas simultáneas, con profundidad = 15 y nivel = 20</li>
+  <li>Función deshacer (d) permite deshacer jugadas; (t) permite ver el tablero.</li>
+  <li>Función análisis (a) genera análisis de Stockfish de 4 ramas simultáneas, con profundidad = 15 y nivel = 20</li>
+  <li>Análisis muestra ganancia relativa (centipeones / 100) y rama ([+1.03] [e2e4 e7e5] equivale a 1.03 peones a favor de las blancas luego de seguir esa rama)
   <li>El output a la LCD esta delimitado por "INICIO PANTALLA" y "FIN PANTALLA".</li>
   </ul>
 
@@ -19,6 +21,7 @@ Funciona con monitor estándar, sin requerir de pantalla LCD.
   <li>Libro de aperturas, basado en Modern Chess Openings (Nick de Firmian)</li>
   <li>Tutor nivel intermedio basado en My System (Ninwikovich)</li>
   <li>Paso simple de una funcionalidad a otra: ej de modo juego a modo apertura y luego a modo de análisis, o viceversa</li>
+  <li><b>Mucha potencialidad educativa!</b></li>
   </ul>
     
     
