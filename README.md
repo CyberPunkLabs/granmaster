@@ -32,6 +32,12 @@ Funciona con monitor estándar, sin requerir de pantalla LCD.
   <li>Auditar análisis Stockfish (revisar que signo de cp esté en lo correcto)
   </ul>
 
+
+### Corre con
+```
+python3 main.py
+```
+
 ### Requiere:
 ```
 apt install stockfish
