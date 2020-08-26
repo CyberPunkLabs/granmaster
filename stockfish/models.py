@@ -171,7 +171,59 @@ class Stockfish:
         self._put(f"position fen {fen_position}")
 
     ### CPLs function !!
-    def get_analysis(self) -> Optional[str]:
+    def get_analysis(self) -> dict:
+        """NEW GM FUNCTION
+
+        Returns:
+            A dictionary of the current advantage with "type" as "cp" (centipawns) or "mate" (checkmate in)
+        """
+
+        evaluation = dict()
+        fen = self.get_fen_position()
+        if "w" in fen:  # w can only be in FEN if it is whites move
+            compare = 1
+        else:  # stockfish shows advantage relative to current player, convention is to do white positive
+            compare = -1 # ORIGINALMENTE -1 !!
+        self._put("position " + fen + "\n go")
+        all = []
+        while True:
+            text = self._read_line()
+            all.append(text)
+            splitted_text = text.split(" ")
+            if splitted_text[0] == "info":
+                #print("[CPLs] " + text)
+                for n in range(len(splitted_text)):
+                    if splitted_text[n] == "score":
+                        evaluation = {
+                            "type": splitted_text[n + 1],
+                            "value": int(splitted_text[n + 2]) * compare,
+                        }
+            elif splitted_text[0] == "bestmove":
+                return all
+
+
+
+        """Get best move with current position on the board.
+
+        Returns:
+            A string of move in algebraic notation or False, if it's a mate now.
+        """
+        self._go()
+        last_text: str = ""
+        while True:
+            text = self._read_line()
+            print("[Stockfish] {}".format(text))
+            splitted_text = text.split(" ")
+            if splitted_text[0] == "bestmove":
+                print("Bestmove !!")
+                if splitted_text[1] == "(none)":
+                    return None
+                self.info = last_text
+                return splitted_text[1]
+            last_text = text
+
+    ### CPLs function !!
+    def get_analysis_verbose(self) -> Optional[str]:
         """Get best move with current position on the board.
 
         Returns:
@@ -189,6 +241,7 @@ class Stockfish:
                 self.info = last_text
                 return splitted_text[1]
             last_text = text
+
 
     def get_best_move(self) -> Optional[str]:
         """Get best move with current position on the board.

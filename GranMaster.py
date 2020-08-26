@@ -2,6 +2,7 @@
 import time
 import pickle
 import random
+import numpy as np
 
 #from lcd5110 import LCD5110
 from stockfish import Stockfish
@@ -59,6 +60,7 @@ class Partida:
     jugada_correcta = True
     salir = False
     imprimir_tablero = False
+    verbose = False
     #lcd_on = True
 
 
@@ -116,7 +118,7 @@ class Partida:
             ### Añade movimiento y jugada (revisar)
             Partida.n_movimiento += 1
             Partida.n_jugada += 1
-            #self.guardarPartida('respaldo')
+            self.escribirPartida(tipo='respaldo')
             #self.imprimirNegras()
 
         else:
@@ -200,12 +202,47 @@ class Partida:
         if entrada == "1245":
             pass
         elif entrada == "a":
-            print("[CPLs] Análisis:")
             Motor.set_skill_level(20)
             Motor.set_depth(15)
-            Motor.get_analysis()
+            if Partida.verbose:
+                print(Motor.get_parameters())
+
+            all = Motor.get_analysis()
+
+            info = []
+            for line in all:
+                splitted_line = line.split(" ")
+                if splitted_line[0] == "info":
+                    info.append(splitted_line)
+
+            info = info[-4:]
+            evaluacion = []
+            variacion = []
+            for linea in info:
+                for palabra in range(len(linea)):
+                    if linea[palabra] == "cp":
+                        temp = np.float(linea[palabra+1]) / 100
+                        if self.color == 'negras':
+                            temp = temp * -1
+                        if temp >= 0:
+                            evaluacion.append("+{}".format(temp))
+                        else:
+                            evaluacion.append("{}".format(temp))
+                    if linea[palabra] == "pv":
+                        variacion.append(linea[palabra+1:])
+
+            self.imprimirGenerico("[Análisis]",
+                                  "{} {}".format(evaluacion[0], variacion[0]),
+                                  "{} {}".format(evaluacion[1], variacion[1]),
+                                  "{} {}".format(evaluacion[2], variacion[2]),
+                                  "{} {}".format(evaluacion[3], variacion[3]),
+                                  dwell=5)
+            #print(splitted_line)
             Motor.set_skill_level(self.skill)
             Motor.set_depth(self.depth)
+            if Partida.verbose:
+                print(Motor.get_parameters())
+
             print("\n")
             #self.imprimirNegras()
         elif entrada == "f":
@@ -219,10 +256,12 @@ class Partida:
         elif entrada == "t":
             print("[CPLs] Tablero:")
             print(Motor.get_board_visual())
+        elif entrada == "l":
+            self.leerPartida(tipo='juego')
         # Si la jugada es incorrecta (Motor.is_move_correct == False ??)
         else:
-            self.imprimirGenerico("{} incorrecta!".format(entrada), "s: Analisis", "t: tablero",
-                                  "f: Posicion FEN", "d: deshacer", "e: escribir juego", dwell=2)
+            self.imprimirGenerico("{} incorrecta!".format(entrada), "a: (A)nalisis", "t: (T)ablero",
+                                  "f: Posicion (F)EN", "d: (D)eshacer", "e: (E)scribir juego", dwell=2)
             #self.titilar()
         Partida.jugada_correcta = False
 
@@ -322,7 +361,7 @@ class Partida:
                 continue
             if (self.skill >= 0) & (self.skill <= 20):
                 Motor.set_skill_level(self.skill)
-                self.imprimirGenerico('Replicante', 'Skill level: {}.'.format(self.skill), dwell=1)
+                self.imprimirGenerico('Replicante', 'Skill level: {}.'.format(self.skill), dwell=0.5)
                 break
             else:
                 self.imprimirGenerico('Opción incorrecta!', dwell=2)
@@ -339,7 +378,7 @@ class Partida:
                 continue
             if (self.depth >= 0) & (self.depth <= 20):
                 Motor.set_depth(self.depth)
-                self.imprimirGenerico('Replicante', 'Depth {}.'.format(self.depth), dwell=1)
+                self.imprimirGenerico('Replicante', 'Depth {}.'.format(self.depth), dwell=0.5)
                 break
             else:
                 self.imprimirGenerico('Opción incorrecta!', dwell=1)
@@ -362,7 +401,7 @@ class Partida:
                 elif opcion == 3:
                     self.color = random.choice(['blancas', 'negras'])
 
-                self.imprimirGenerico('Color', '{}.'.format(self.color), dwell=2)
+                self.imprimirGenerico('Color', '{}.'.format(self.color), dwell=0.5)
                 break
 
             else:
@@ -384,8 +423,7 @@ class Partida:
                     self.leerPartida(tipo='juego')
                 if opcion == 2:
                     self.configuracion()
-
-                self.imprimirGenerico('Color', '{}.'.format(self.color), dwell=2)
+                self.imprimirGenerico('Perfil', '{}.'.format(self.color), dwell=0.5)
                 break
 
             else:
@@ -425,7 +463,7 @@ class Partida:
             time.sleep(2)
 
 
-   ### Cargar juego
+   ### Leer partida
     def leerPartida(self, tipo):
 
         if tipo == 'respaldo':
@@ -483,7 +521,7 @@ class Partida:
 
         Motor.set_position(Partida.variacion)
         #print(stockfish.get_board_visual())
-        time.sleep(2)
+        #time.sleep(2)
 
 
 
