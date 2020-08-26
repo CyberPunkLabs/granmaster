@@ -68,7 +68,7 @@ class Partida:
         ### Despliega pantallas de configuracion
         #self.configuracion()
         self.crearPerfil()
-
+        self.contempt = 0
 
 
 ##################       Inicio del loop principal         #####################
@@ -178,7 +178,7 @@ class Partida:
     def evaluarPosicion(self):
         ### Mejora habilidad y evalua tablero
         Motor.set_skill_level(20)
-        Motor.set_depth(20)
+        Motor.set_depth(15)
 
         ### Fija posicion en el tablero
         Motor.set_position(Partida.variacion)
@@ -202,7 +202,7 @@ class Partida:
         elif entrada == "a":
             print("[CPLs] Análisis:")
             Motor.set_skill_level(20)
-            Motor.set_depth(20)
+            Motor.set_depth(15)
             Motor.get_analysis()
             Motor.set_skill_level(self.skill)
             Motor.set_depth(self.depth)
@@ -398,7 +398,10 @@ class Partida:
         # Crea diccionario con header y arbol (implementar PGN)
         diccionario = dict(header=Partida.header, variacion=Partida.variacion, n_jugada=Partida.n_jugada,
                            n_movimiento=Partida.n_movimiento, evaluacion=Partida.evaluacion,
-                           jugada_correcta=Partida.jugada_correcta, color=self.color, pgn=[])
+                           jugada_correcta=Partida.jugada_correcta, color=self.color, skill=self.skill,
+                           depth=self.depth, contempt=self.contempt, pgn = [])
+
+
 
         # Si es con opcion de grabado automatico (respaldo)
         if tipo == 'respaldo':
@@ -436,6 +439,12 @@ class Partida:
                 Partida.evaluacion      = diccionario['evaluacion']
                 Partida.jugada_correcta = diccionario['jugada_correcta']
                 self.color              = diccionario['color']
+                self.skill              = diccionario['skill']
+                self.depth              = diccionario['depth']
+                self.contempt           = diccionario['contempt']
+
+                Motor.set_depth(self.depth)
+                Motor.set_skill_level(self.skill)
 
             except FileNotFoundError:
                 self.imprimirGenerico("respaldo.gm", "no existe...")
@@ -462,6 +471,9 @@ class Partida:
                 Partida.evaluacion      = diccionario['evaluacion']
                 Partida.jugada_correcta = diccionario['jugada_correcta']
                 self.color              = diccionario['color']
+                self.skill              = diccionario['skill']
+                self.depth              = diccionario['depth']
+                self.contempt           = diccionario['contempt']
 
                 self.imprimirGenerico("Perfil cargado", "{} !!".format(opcion))
 
