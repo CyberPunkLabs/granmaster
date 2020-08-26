@@ -1,10 +1,23 @@
-# granmaestro
+# GranMaster
 Tutor de ajedrez basado en Stockfish
+
+## Versión de desarrollo
+Funciona con monitor estándar, sin requerir de pantalla LCD.<br>
+El output a la LCD esta delimitado por "INICIO PANTALLA" y "FIN PANTALLA".
+
+###Funcionalidades
+<ul>
+  <li>Configura partida nueva o carga perfil de usuario</li>
+  <li>Permite configurar profundidad (0-20) y habilidad (0-20) de la máquina. Valores ~ 20 equivalen a ELO ~ 3500 (ELO Kasparov: 2500)</li>
+  <li>Perfil de usuario permite escribir (e) y leer (l) partidas</li>
+  <li>Función deshacer (d) permite deshacer jugadas. (t) y permiten ver el tablero y , respectivamente.</li>
+  <li>Función análisis genera análisis de Stockfish de 4 ramas simultáneas, con profundidad = 15 y nivel = 20</li>
+  </ul>
+
 
 ### Requiere:
 ```
 apt install stockfish
-pip3 install stockfish
 
 sudo apt-get install python3-pip
 pip3 install RPi-GPIO
