@@ -2,8 +2,7 @@
 Tutor de ajedrez basado en Stockfish
 
 ## Versión de desarrollo
-Funciona con monitor estándar, sin requerir de pantalla LCD.<br>
-El output a la LCD esta delimitado por "INICIO PANTALLA" y "FIN PANTALLA".
+Funciona con monitor estándar, sin requerir de pantalla LCD.
 
 ### Funcionalidades
 <ul>
@@ -12,12 +11,14 @@ El output a la LCD esta delimitado por "INICIO PANTALLA" y "FIN PANTALLA".
   <li>Perfil de usuario permite escribir (e) y leer (l) partidas</li>
   <li>Función deshacer (d) permite deshacer jugadas. (t) y permiten ver el tablero y , respectivamente.</li>
   <li>Función análisis genera análisis de Stockfish de 4 ramas simultáneas, con profundidad = 15 y nivel = 20</li>
+  <li>El output a la LCD esta delimitado por "INICIO PANTALLA" y "FIN PANTALLA".</li>
   </ul>
 
 ### Por implementar:
 <ul>
   <li>Libro de aperturas, basado en Modern Chess Openings (Nick de Firmian)</li>
   <li>Tutor nivel intermedio basado en My System (Ninwikovich)</li>
+  <li>Paso simple de una funcionalidad a otra: ej de modo juego a modo apertura y luego a modo de análisis, o viceversa</li>
   </ul>
     
     
