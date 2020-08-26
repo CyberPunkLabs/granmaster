@@ -486,6 +486,7 @@ class Partida:
 
             except FileNotFoundError:
                 self.imprimirGenerico("respaldo.gm", "no existe...")
+                self.crearPerfil()
 
 
         else:
@@ -516,7 +517,8 @@ class Partida:
                 self.imprimirGenerico("Perfil cargado", "{} !!".format(opcion))
 
             except FileNotFoundError:
-                self.imprimirGenerico("{}".format(opcion), "no existe...")
+                self.imprimirGenerico("{}".format(opcion), "no existe...", dwell=1)
+                self.crearPerfil()
 
 
         Motor.set_position(Partida.variacion)
