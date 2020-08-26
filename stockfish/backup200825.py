@@ -27,12 +27,8 @@ DEFAULT_STOCKFISH_PARAMS = {
 class Stockfish:
     """Integrates the Stockfish chess engine with Python."""
 
-    def __init__(
-        self, path: str = "stockfish", depth: int = 2, parameters: dict = None
-    ) -> None:
-        self.stockfish = subprocess.Popen(
-            path, universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE
-        )
+    def __init__(self, path: str = "stockfish", depth: int = 2, parameters: dict = None) -> None:
+        self.stockfish = subprocess.Popen(path, universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
         self._put("uci")
 
@@ -170,26 +166,6 @@ class Stockfish:
         self._start_new_game()
         self._put(f"position fen {fen_position}")
 
-    ### CPLs function !!
-    def get_analysis(self) -> Optional[str]:
-        """Get best move with current position on the board.
-
-        Returns:
-            A string of move in algebraic notation or False, if it's a mate now.
-        """
-        self._go()
-        last_text: str = ""
-        while True:
-            text = self._read_line()
-            print("[Stockfish] {}".format(text))
-            splitted_text = text.split(" ")
-            if splitted_text[0] == "bestmove":
-                if splitted_text[1] == "(none)":
-                    return None
-                self.info = last_text
-                return splitted_text[1]
-            last_text = text
-
     def get_best_move(self) -> Optional[str]:
         """Get best move with current position on the board.
 
@@ -207,6 +183,50 @@ class Stockfish:
                 self.info = last_text
                 return splitted_text[1]
             last_text = text
+
+    ### Funcion agregada por CPLs
+    def get_analysis(self) -> Optional[str]:
+        """ NEW GRANMASTER FUNCTION !!
+            Get the analysis of the current position on the board.
+
+        Returns:
+            A string of move in algebraic notation or False, if it's a mate now.
+        """
+        self._go()
+        last_text: str = ""
+        while True:
+            text = self._read_line()
+            print("[Stockfish] {}".format(text))
+            splitted_text = text.split(" ")
+
+            analisis = dict()
+            indice = 1
+            if splitted_text[:3] == ["info", "depth", "15"]:
+                print("[CPLs] Depth 15!!")
+                for n in range(len(splitted_text)):
+                    if splitted_text[n] == "cp":
+                        evaluacion = splitted_text[n+1]
+                        print(evaluacion)
+                        variacion = splitted_text[n+12:]
+                        print("[{}] {}".format(evaluacion, variacion))
+                        analisis[str(indice)] = {"cp": evaluacion, "variacion": variacion}
+                        indice += 1
+                    else:
+                        pass
+                self.info = last_text
+            text = last_text
+                #indice += 1
+
+            return analisis
+
+                        #return None
+            #if splitted_text[0] == "bestmove":
+            #    print("[CPLs] {}".format(splitted_text))
+            #    if splitted_text[1] == "(none)":
+            #        return None
+            #    self.info = last_text
+            #    return splitted_text[1]
+            #last_text = text
 
     def get_best_move_time(self, time: int = 1000) -> Optional[str]:
         """Get best move with current position on the board after a determined time
@@ -264,6 +284,7 @@ class Stockfish:
         self._put("position " + fen + "\n go")
         while True:
             text = self._read_line()
+            #print(text)
             splitted_text = text.split(" ")
             if splitted_text[0] == "info":
                 for n in range(len(splitted_text)):

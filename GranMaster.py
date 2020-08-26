@@ -58,6 +58,7 @@ class Partida:
     n_jugada = 1
     jugada_correcta = True
     salir = False
+    imprimir_tablero = False
     #lcd_on = True
 
 
@@ -74,24 +75,26 @@ class Partida:
     def jugada(self):
         if self.color == 'blancas':
             ### Imprime info (para desarrolladores)
-            print("[CPLs] Tablero:")
-            print(Motor.get_board_visual())
+            if Partida.imprimir_tablero:
+                print("[CPLs] Tablero:")
+                print(Motor.get_board_visual())
             self.imprimirNegras()
             print("[CPLs] Partida: {}".format(Partida.variacion))
 
             self.HUMANO()
             self.REPLICANTE()
-            print("[CPLs] Jugada correcta? {}".format(Partida.jugada_correcta))
+            #print("[CPLs] Jugada correcta? {}".format(Partida.jugada_correcta))
 
         else:
-            print("[CPLs] Jugada correcta? {}".format(Partida.jugada_correcta))
+            #print("[CPLs] Jugada correcta? {}".format(Partida.jugada_correcta))
 
 
             self.REPLICANTE()
 
             ### Imprime info (para desarrolladores)
-            print("[CPLs] Tablero:")
-            print(Motor.get_board_visual())
+            if Partida.imprimir_tablero:
+                print("[CPLs] Tablero:")
+                print(Motor.get_board_visual())
             self.imprimirNegras()
             print("[CPLs] Partida: {}".format(Partida.variacion))
 
@@ -124,7 +127,7 @@ class Partida:
 
     def REPLICANTE(self):
         if Partida.jugada_correcta:
-            self.imprimirGenerico('Replicante 0.1', 'esta pensando...', dwell=1)
+            self.imprimirGenerico("Replicante {}.{}".format(self.skill, self.depth), "esta pensando...", dwell=1)
 
             if Partida.n_jugada == 1:
                 com = random.choice(Partida.aperturas['top10'])
@@ -175,7 +178,7 @@ class Partida:
     def evaluarPosicion(self):
         ### Mejora habilidad y evalua tablero
         Motor.set_skill_level(20)
-        Motor.depth = 15
+        Motor.set_depth(20)
 
         ### Fija posicion en el tablero
         Motor.set_position(Partida.variacion)
@@ -184,7 +187,7 @@ class Partida:
 
         ### Vuelve a habilidad por defecto
         Motor.set_skill_level(self.skill)
-        Motor.depth = self.depth
+        Motor.set_depth(self.depth)
 
         ### Vuelve a fijar posicion en el tablero
         Motor.set_position(Partida.variacion)
@@ -199,33 +202,28 @@ class Partida:
         elif entrada == "a":
             print("[CPLs] Análisis:")
             Motor.set_skill_level(20)
-            Motor.set_depth(15)
-
-            analisis = Motor.get_analysis()
-            print(analisis)
-            Motor.set_skill_level(1)
-            Motor.set_depth(2)
-
+            Motor.set_depth(20)
+            Motor.get_analysis()
+            Motor.set_skill_level(self.skill)
+            Motor.set_depth(self.depth)
             print("\n")
-
-            self.imprimirNegras()
-
+            #self.imprimirNegras()
         elif entrada == "f":
             print("[CPLs] FEN position:")
             print(Motor.get_fen_position())
             print("\n")
-
-        elif entrada == "4":
+        elif entrada == "d":
             self.deshacer()
-
-        elif entrada == "5":
+        elif entrada == "e":
             self.escribirPartida(tipo='juego')
-
+        elif entrada == "t":
+            print("[CPLs] Tablero:")
+            print(Motor.get_board_visual())
         # Si la jugada es incorrecta (Motor.is_move_correct == False ??)
         else:
-            self.imprimirGenerico('{} incorrecta!'.format(entrada), dwell=2)
+            self.imprimirGenerico("{} incorrecta!".format(entrada), "s: Analisis", "t: tablero",
+                                  "f: Posicion FEN", "d: deshacer", "e: escribir juego", dwell=2)
             #self.titilar()
-
         Partida.jugada_correcta = False
 
 
@@ -300,7 +298,6 @@ class Partida:
     def formatearPartida(self):
         if self.color == 'blancas':
             if len(Partida.variacion) <= 4:
-                print("largo variacion: {}".format(len(Partida.variacion)))
                 Partida.ultimas = Partida.variacion + ["*"] + ([" "] * (3 - len(Partida.variacion)))
             else:
                 Partida.ultimas = Partida.variacion[-3:] + ["*"]
