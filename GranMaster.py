@@ -495,7 +495,7 @@ class Partida:
             self.imprimirGenerico("Guardado en", "{} !!".format(opcion))
             time.sleep(2)
 
-
+   #Prueba
    ### Leer partida
     def leerPartida(self, tipo):
         ### Carga perfil
