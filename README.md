@@ -40,9 +40,8 @@ python3 main.py
 
 ### Requiere:
 ```
-apt install stockfish
+apt install python3 python3-pip python3-numpy stockfish
 
-sudo apt-get install python3-pip
 pip3 install RPi-GPIO
 pip3 install spidev
 ```
