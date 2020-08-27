@@ -4,6 +4,7 @@ import time
 import pickle
 import random
 import numpy as np
+from datetime import datetime
 
 #from lcd5110 import LCD5110
 from stockfish import Stockfish
@@ -41,17 +42,6 @@ class Partida:
 
 '''
 
-    ### Construye header con info sobre la partida (por implementar)
-    header = dict(
-        evento = 'Partida CyberPunkChess',
-        lugar = 'Laboratorios CyberPunk',
-        fecha = '20 abril 2020',
-        ronda = 1,
-        jugador_blancas = 'Perfil 1',
-        jugador_negras = 'Stockfish Level {} Depth {}'.format(10, 30), # DECLARARLO MAS ADELANTE !!
-        resultado = '*/*')
-
-
 
     ### Declara variables basicas
     aperturas = pickle.load(open('basesdatos/libroAperturas.gm', 'rb'))
@@ -67,11 +57,28 @@ class Partida:
 
     ### Pantalla de inicio. Revisar si adecuado declararla en __init__
     def __init__(self):
-
         ### Despliega pantallas de configuracion
         #self.configuracion()
         self.crearPerfil()
         self.contempt = 0
+
+        if self.color == 'blancas':
+            blancas = self.perfil,
+            negras = 'Replicante{}.{}'.format(self.depth, self.skill),
+        else:
+            negras = self.perfil,
+            blancas = 'Replicante{}.{}'.format(self.depth, self.skill),
+
+        ### Construye header con info sobre la partida (por implementar)
+        now = datetime.now()
+        self.header = dict(
+                      evento          = 'Testeos GranMaster',
+                      lugar           = 'Laboratorios CyberPunk',
+                      fecha           = now.strftime("%d/%m/%Y_%H:%M:%S"),
+                      ronda           = 1,
+                      jugador_blancas = blancas,
+                      jugador_negras  = negras,
+                      resultado       = '*/*')
 
 
 ##################       Inicio del loop principal         #####################
@@ -81,7 +88,7 @@ class Partida:
             if Partida.imprimir_tablero:
                 print("[CPLs] Tablero:")
                 print(Motor.get_board_visual())
-            self.imprimirNegras()
+            self.imprimirPartida()
             print("[CPLs] Partida: {}".format(Partida.variacion))
 
             self.HUMANO()
@@ -98,7 +105,7 @@ class Partida:
             if Partida.imprimir_tablero:
                 print("[CPLs] Tablero:")
                 print(Motor.get_board_visual())
-            self.imprimirNegras()
+            self.imprimirPartida()
             print("[CPLs] Partida: {}".format(Partida.variacion))
 
             self.HUMANO()
@@ -110,27 +117,33 @@ class Partida:
         ### Espera por input de las negras y lo transforma a minusculas (para reconocimiento posterior)
         entrada = input().lower()
 
-        # Si existe input y este es una jugada correcta
-        if (len(entrada) > 1) & (Motor.is_move_correct(entrada)):
-            Partida.jugada_correcta = True
-            Partida.variacion.append(entrada)
-            self.evaluarPosicion()
+        if True: # Para partidas
+            # Si existe input y este es una jugada correcta
+            if (len(entrada) > 1) & (Motor.is_move_correct(entrada)):
+                Partida.jugada_correcta = True
+                Partida.variacion.append(entrada)
+                self.evaluarPosicion()
 
-            ### Añade movimiento y jugada (revisar)
-            Partida.n_movimiento += 1
-            Partida.n_jugada += 1
-            self.escribirPartida(tipo='respaldo')
-            #self.imprimirNegras()
+                ### Añade movimiento y jugada (revisar)
+                Partida.n_movimiento += 1
+                Partida.n_jugada += 1
+                #self.escribirPartida(tipo='respaldo')
+                #self.imprimirNegras()
 
-        else:
-            self.manipularOpciones(entrada)
+            else:
+                self.manipularOpciones(entrada)
+
+        if False: # Para libro de aperturas
+            if entrada == Libro.apertura[Partida.n_movimiento]:
+                pass
 
         return entrada
 
 
     def REPLICANTE(self):
         if Partida.jugada_correcta:
-            self.imprimirGenerico("Replicante {}.{}".format(self.skill, self.depth), "esta pensando...", dwell=1)
+            self.imprimirGenerico("Replicante {}.{}".format(self.skill, self.depth),
+                                  "está pensando...", dwell=1)
 
             if Partida.n_jugada == 1:
                 com = random.choice(Partida.aperturas['top10'])
@@ -186,7 +199,10 @@ class Partida:
         ### Fija posicion en el tablero
         Motor.set_position(Partida.variacion)
         evaluacion = Motor.get_evaluation()
-        Partida.evaluacion = evaluacion #['value'] / 100
+        if (evaluacion['value'] / 100) >= 0:
+            Partida.evaluacion = "+{:.2f}".format(evaluacion['value'] / 100)
+        else:
+            Partida.evaluacion = "{:.2f}".format(evaluacion['value'] / 100)
 
         ### Vuelve a habilidad por defecto
         Motor.set_skill_level(self.skill)
@@ -194,8 +210,8 @@ class Partida:
 
         ### Vuelve a fijar posicion en el tablero
         Motor.set_position(Partida.variacion)
-        evaluacion = Motor.get_evaluation()
-        Partida.evaluacion = evaluacion #['value'] / 100
+        #evaluacion = Motor.get_evaluation()
+        #Partida.evaluacion = evaluacion #['value'] / 100
 
 
 
@@ -203,48 +219,7 @@ class Partida:
         if entrada == "1245":
             pass
         elif entrada == "a":
-            Motor.set_skill_level(20)
-            Motor.set_depth(15)
-            if Partida.verbose:
-                print(Motor.get_parameters())
-
-            all = Motor.get_analysis()
-
-            info = []
-            for line in all:
-                splitted_line = line.split(" ")
-                if splitted_line[0] == "info":
-                    info.append(splitted_line)
-
-            info = info[-4:]
-            evaluacion = []
-            variacion = []
-            for linea in info:
-                for palabra in range(len(linea)):
-                    if linea[palabra] == "cp":
-                        temp = np.float(linea[palabra+1]) / 100
-                        if self.color == 'negras':
-                            temp = temp * -1
-                        if temp >= 0:
-                            evaluacion.append("+{}".format(temp))
-                        else:
-                            evaluacion.append("{}".format(temp))
-                    if linea[palabra] == "pv":
-                        variacion.append(linea[palabra+1:])
-
-            self.imprimirGenerico("[Análisis]",
-                                  "{} {}".format(evaluacion[0], variacion[0]),
-                                  "{} {}".format(evaluacion[1], variacion[1]),
-                                  "{} {}".format(evaluacion[2], variacion[2]),
-                                  "{} {}".format(evaluacion[3], variacion[3]),
-                                  dwell=5)
-            #print(splitted_line)
-            Motor.set_skill_level(self.skill)
-            Motor.set_depth(self.depth)
-            if Partida.verbose:
-                print(Motor.get_parameters())
-
-            print("\n")
+            self.imprimirAnalisis()
             #self.imprimirNegras()
         elif entrada == "f":
             print("[CPLs] FEN position:")
@@ -261,10 +236,55 @@ class Partida:
             self.leerPartida(tipo='juego')
         # Si la jugada es incorrecta (Motor.is_move_correct == False ??)
         else:
-            self.imprimirGenerico("{} incorrecta!".format(entrada), "a: (A)nalisis", "t: (T)ablero",
-                                  "f: Posicion (F)EN", "d: (D)eshacer", "e: (E)scribir juego", dwell=2)
+            self.imprimirGenerico("-> (a)nalisis", "-> (t)ablero", "-> Posicion (f)EN",
+                                  "-> (d)eshacer", "-> (e)scribir partida", "-> (l)eer partida",
+                                  dwell=2)
             #self.titilar()
         Partida.jugada_correcta = False
+
+
+    ### Imprimir analisis
+    def imprimirAnalisis(self):
+        Motor.set_skill_level(20)
+        Motor.set_depth(15)
+        if Partida.verbose:
+            print(Motor.get_parameters())
+
+        all = Motor.get_analysis()
+
+        info = []
+        for line in all:
+            splitted_line = line.split(" ")
+            if splitted_line[0] == "info":
+                info.append(splitted_line)
+
+        info = info[-4:]
+        evaluacion = []
+        variacion = []
+        for linea in info:
+            for palabra in range(len(linea)):
+                if linea[palabra] == "cp":
+                    temp = np.float(linea[palabra+1]) / 100
+                    if self.color == 'negras':
+                        temp = temp * -1
+                    if temp >= 0:
+                        evaluacion.append("+{}".format(temp))
+                    else:
+                        evaluacion.append("{}".format(temp))
+                if linea[palabra] == "pv":
+                    variacion.append(linea[palabra+1:])
+        self.imprimirGenerico("[Análisis]",
+                              "{} {}".format(evaluacion[0], variacion[0]),
+                              "{} {}".format(evaluacion[1], variacion[1]),
+                              "{} {}".format(evaluacion[2], variacion[2]),
+                              "{} {}".format(evaluacion[3], variacion[3]),
+                              dwell=2)
+        #print(splitted_line)
+        Motor.set_skill_level(self.skill)
+        Motor.set_depth(self.depth)
+        if Partida.verbose:
+            print(Motor.get_parameters())
+        print("\n")
 
 
     ### Deshacer jugada
@@ -276,10 +296,8 @@ class Partida:
             # Borra las ultimas dos
             del Partida.variacion[-2:]
 
-            # Fija posicion y reevalua
-            Motor.set_position(Partida.variacion)
-            evaluacion = Motor.get_evaluation()
-            Partida.evaluacion = evaluacion #['value'] / 100
+            # Reevalua posicion
+            self.evaluarPosicion()
 
             Partida.n_jugada     -= 1
             Partida.n_movimiento -= 2
@@ -288,11 +306,11 @@ class Partida:
         else:
             self.imprimirGenerico("No hay mas jugadas", "que deshacer!", dwell=2)
 
-        self.imprimirNegras()
+        self.imprimirPartida()
 
 
     ### Imprimir pantalla para negras
-    def imprimirNegras(self):
+    def imprimirPartida(self):
         self.formatearPartida()
 
         if self.color == 'blancas':
@@ -428,7 +446,7 @@ class Partida:
                 if opcion == 2:
                     self.configuracion()
                     self.perfil = "Intruso"
-                self.imprimirGenerico("Perfil:", "Intruso", "Color:", "{}.".format(self.color), dwell=0.5)
+                self.imprimirGenerico("Perfil:", "{}", "Color:", "{}.".format(self.perfil, self.color), dwell=0.5)
                 break
 
             else:
@@ -439,37 +457,70 @@ class Partida:
     ### Guardar juego
     def escribirPartida(self, tipo):
         # Crea diccionario con header y arbol (implementar PGN)
-        diccionario = dict(header=Partida.header, variacion=Partida.variacion, n_jugada=Partida.n_jugada,
+        partida = dict(header=self.header, variacion=Partida.variacion, n_jugada=Partida.n_jugada,
                            n_movimiento=Partida.n_movimiento, evaluacion=Partida.evaluacion,
                            jugada_correcta=Partida.jugada_correcta, color=self.color, skill=self.skill,
                            depth=self.depth, contempt=self.contempt, pgn = [])
 
+        #-------------------  
+        self.imprimirGenerico("Escribe nombre perfil:", "a: (A)trás")
+        print("Perfiles:")
+        print(os.listdir('perfiles/'))
 
+        opcion = input()
+        if opcion != "a":
+            if self.color == 'blancas':
+                nombre_partida = "{}-Replicante{}.{} {}".format(opcion, partida['depth'], partida['skill'], partida['header']['fecha'])
+            else:
+                nombre_partida = "Replicante{}.{}-{} {}".format(partida['depth'], partida['skill'], opcion, partida['header']['fecha'])
 
-        # Si es con opcion de grabado automatico (respaldo)
-        if tipo == 'respaldo':
-            pickle.dump(diccionario, open('juegos/{}.gm'.format(tipo), 'wb'))
+            try:
+                diccionario = pickle.load(open('perfiles/{}.gm'.format(opcion), 'rb'))
+                diccionario[nombre_partida] = partida
+            except FileNotFoundError:
+                 print("[CPLs] Creando nuevo perfil")
+                 diccionario = {nombre_partida: partida}
+                 #self.imprimirGenerico("{}.gm".format(opcion), "no existe...", dwell=1)
 
-        # Si no, pregunta donde guardar el juego:
-        else:
-            #-------------------  
-            self.imprimirGenerico("Escribe nombre perfil:", "a: (A)trás")
-            print("Perfiles:")
-            print(os.listdir('juegos/'))
-
-            opcion = input()
-            if opcion != "a":
-                pickle.dump(diccionario, open('juegos/{}.gm'.format(opcion), 'wb'))
-                self.imprimirGenerico("Guardado en", "{} !!".format(opcion))
-                time.sleep(2)
+            pickle.dump(diccionario, open('perfiles/{}.gm'.format(opcion), 'wb'))
+            self.imprimirGenerico("Guardado en", "{} !!".format(opcion))
+            time.sleep(2)
 
 
    ### Leer partida
     def leerPartida(self, tipo):
+        ### Carga perfil
+        self.imprimirGenerico("Escribe tu perfil:", "(sin extensión)")
+        perfiles = os.listdir('perfiles/')
+        ### Imprime lista de perfiles
+        for linea in perfiles:
+            print("{}".format(linea))
+        ### Espera por input de usuario
+        nombre_perfil = input()
 
-        if tipo == 'respaldo':
+        try:
+            perfil = pickle.load(open('perfiles/{}.gm'.format(nombre_perfil), 'rb'))
+            ### Imprime partidas en perfil
+            partidas = list(perfil.keys())
+            print("[CPLs] Partidas en perfil:")
+            iterador = 1
+            for line in partidas:
+                print("({}) {}".format(iterador, line))
+                iterador += 1
+
+            self.imprimirGenerico("Selecciona partida:", "(elige número)")
             try:
-                diccionario = pickle.load(open('juegos/{}.gm'.format(tipo), 'rb'))
+                opcion = int(input())
+            except ValueError:
+                self.imprimirGenerico("Opción {}".format(opcion), "incorrecta !!")
+                self.configuracion()
+                return
+
+            print("Selección: {}".format(opcion))
+            print("Numero partidas: {}".format(len(partidas)))
+            if (opcion > 0) & (opcion < (len(partidas) + 1)):
+                partida = partidas[opcion - 1]
+                diccionario = perfil[partida]
 
                 Partida.header          = diccionario['header']
                 Partida.variacion       = diccionario['variacion']
@@ -481,43 +532,15 @@ class Partida:
                 self.skill              = diccionario['skill']
                 self.depth              = diccionario['depth']
                 self.contempt           = diccionario['contempt']
+                self.perfil             = nombre_perfil
+                self.imprimirGenerico("Perfil {}".format(self.perfil), "Cargado exitosamente!")
+            else:
+                self.imprimirGenerico("La opción {}".format(opcion), "Es incorrecta.", dwell=2)
+                return
 
-                Motor.set_depth(self.depth)
-                Motor.set_skill_level(self.skill)
-
-            except FileNotFoundError:
-                self.imprimirGenerico("respaldo.gm", "no existe...")
-                self.crearPerfil()
-
-
-        else:
-            #-------------------
-            self.imprimirGenerico("Selecciona:")
-            print(os.listdir('juegos/'))
-
-            opcion = input()
-
-            try:
-                diccionario = pickle.load(open('juegos/{}.gm'.format(opcion), 'rb'))
-
-                Partida.header          = diccionario['header']
-                Partida.variacion       = diccionario['variacion']
-                Partida.n_jugada        = diccionario['n_jugada']
-                Partida.n_movimiento    = diccionario['n_movimiento']
-                Partida.evaluacion      = diccionario['evaluacion']
-                Partida.jugada_correcta = diccionario['jugada_correcta']
-                self.color              = diccionario['color']
-                self.skill              = diccionario['skill']
-                self.depth              = diccionario['depth']
-                self.contempt           = diccionario['contempt']
-                self.perfil             = opcion
-
-                self.imprimirGenerico("Perfil cargado", "{} !!".format(opcion))
-
-            except FileNotFoundError:
-                self.imprimirGenerico("{}.gm".format(opcion), "no existe...", dwell=1)
-                self.crearPerfil()
-
+        except FileNotFoundError:
+            self.imprimirGenerico("El perfil {}".format(opcion), "No existe!", dwell=1)
+            self.crearPerfil()
 
         Motor.set_position(Partida.variacion)
         #print(stockfish.get_board_visual())
