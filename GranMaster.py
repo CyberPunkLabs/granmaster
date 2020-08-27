@@ -1,4 +1,5 @@
 ### Importa modulos requieridos por Gran Master
+import os
 import time
 import pickle
 import random
@@ -317,7 +318,10 @@ class Partida:
 
         line1 = " Analisis: {}".format(Partida.evaluacion)
         line4 = " "
-        line5 = " "
+        if self.color == 'blancas':
+            line5 = "{} - Replicante{}.{}".format(self.perfil, self.skill, self.depth)
+        else:
+            line5 = "Replicante{}.{} - {}".format(self.skill, self.depth, self.perfil)
         line6 = "Ingresa jugada..."
 
         self.imprimirGenerico(line1, line2, line3, line4, line5, line6, seleccion=False)
@@ -423,7 +427,8 @@ class Partida:
                     self.leerPartida(tipo='juego')
                 if opcion == 2:
                     self.configuracion()
-                self.imprimirGenerico('Perfil', '{}.'.format(self.color), dwell=0.5)
+                    self.perfil = "Intruso"
+                self.imprimirGenerico("Perfil:", "Intruso", "Color:", "{}.".format(self.color), dwell=0.5)
                 break
 
             else:
@@ -447,20 +452,16 @@ class Partida:
 
         # Si no, pregunta donde guardar el juego:
         else:
-            perfiles = ['perfil1', 'perfil2', 'perfil3', 'perfil4', 'perfil5']
-
             #-------------------  
-            self.imprimirGenerico("Selecciona:", "(1) Perfil", "(2) Perfil",
-                                  "(3) Perfil", "(4) Perfil", "(5) Perfil")
-
+            self.imprimirGenerico("Escribe nombre perfil:", "a: (A)trás")
+            print("Perfiles:")
+            print(os.listdir('juegos/'))
 
             opcion = input()
-            opcion = perfiles[int(opcion) - 1]
-
-            pickle.dump(diccionario, open('juegos/{}.gm'.format(opcion), 'wb'))
-
-            self.imprimirGenerico("Guardado en", "{}.gm !!".format(opcion))
-            time.sleep(2)
+            if opcion != "a":
+                pickle.dump(diccionario, open('juegos/{}.gm'.format(opcion), 'wb'))
+                self.imprimirGenerico("Guardado en", "{} !!".format(opcion))
+                time.sleep(2)
 
 
    ### Leer partida
@@ -490,15 +491,11 @@ class Partida:
 
 
         else:
-            perfiles = ['perfil1', 'perfil2', 'perfil3', 'perfil4', 'perfil5']
-
-            #-------------------  
-            self.imprimirGenerico("Selecciona:", "(1) Perfil", "(2) Perfil",
-                                  "(3) Perfil", "(4) Perfil", "(5) Perfil")
-
+            #-------------------
+            self.imprimirGenerico("Selecciona:")
+            print(os.listdir('juegos/'))
 
             opcion = input()
-            opcion = perfiles[int(opcion) - 1]
 
             try:
                 diccionario = pickle.load(open('juegos/{}.gm'.format(opcion), 'rb'))
@@ -513,11 +510,12 @@ class Partida:
                 self.skill              = diccionario['skill']
                 self.depth              = diccionario['depth']
                 self.contempt           = diccionario['contempt']
+                self.perfil             = opcion
 
                 self.imprimirGenerico("Perfil cargado", "{} !!".format(opcion))
 
             except FileNotFoundError:
-                self.imprimirGenerico("{}".format(opcion), "no existe...", dwell=1)
+                self.imprimirGenerico("{}.gm".format(opcion), "no existe...", dwell=1)
                 self.crearPerfil()
 
 
