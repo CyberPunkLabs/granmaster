@@ -155,14 +155,23 @@ class Partida:
 
                 ### Toma jugada de best_move dado nivel y profundidad
                 com = Motor.get_best_move()
+                print("COM: {}".format(com))
+                print("Type COM: {}".format(type(com)))
+                if com == None:
+                    self.header['resultado'] = '+/-'
+                    com = "MATE!"
+                    self.imprimirGenerico("MATE !!", dwell=5)
+                    self.escribirPartida(tipo='juego')
                 ### Alternativamente, podria tomarla de best_move_time dado limite temporal
                 #blancas = Motor.get_best_move_time(2000)
-                print("[CPLs] Jugada en {} s.".format(time.time() - clock))
+                if True:
+                    print("[CPLs] Jugada en {} s.".format(time.time() - clock))
 
 	    ### Agrega la jugada al arbol de la partida
             Partida.variacion.append(com)
             Partida.n_movimiento += 1
-            print("[CPLs] n movimiento: {}".format(Partida.n_movimiento))
+            if verbose:
+                print("[CPLs] n movimiento: {}".format(Partida.n_movimiento))
 
             self.evaluarPosicion()
             #self.imprimirNegras()
