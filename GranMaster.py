@@ -170,7 +170,7 @@ class Partida:
 	    ### Agrega la jugada al arbol de la partida
             Partida.variacion.append(com)
             Partida.n_movimiento += 1
-            if verbose:
+            if Partida.verbose:
                 print("[CPLs] n movimiento: {}".format(Partida.n_movimiento))
 
             self.evaluarPosicion()
@@ -401,14 +401,14 @@ class Partida:
 
         ### Version replicante (profundidad jugada)
         while True:
-            self.imprimirGenerico('Depth','(0-20)')
+            self.imprimirGenerico('Depth','(0-15)')
             opcion = input()
             try:
                 self.depth = int(opcion)
             except ValueError:
                 self.imprimirGenerico('Opción incorrecta!', dwell=1)
                 continue
-            if (self.depth >= 0) & (self.depth <= 20):
+            if (self.depth >= 0) & (self.depth <= 15):
                 Motor.set_depth(self.depth)
                 self.imprimirGenerico('Replicante', 'Depth {}.'.format(self.depth), dwell=0.5)
                 break
