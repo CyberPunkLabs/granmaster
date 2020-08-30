@@ -46,6 +46,7 @@ class Partida:
 
     ### Declara variables basicas
     aperturas = pickle.load(open('basesdatos/libroAperturas.gm', 'rb'))
+    diccionario_unicode = pickle.load(open('basesdatos/piezas.unicode', 'rb'))
     variacion = []
     n_movimiento = 0
     n_jugada = 1
@@ -170,7 +171,7 @@ class Partida:
 	    ### Agrega la jugada al arbol de la partida
             Partida.variacion.append(com)
             Partida.n_movimiento += 1
-            if verbose:
+            if Partida.verbose:
                 print("[CPLs] n movimiento: {}".format(Partida.n_movimiento))
 
             self.evaluarPosicion()
@@ -233,7 +234,11 @@ class Partida:
             #self.imprimirNegras()
         elif entrada == "f":
             print("[CPLs] FEN position:")
-            print(Motor.get_fen_position())
+            fen = Motor.get_fen_position()
+            for i in fen:
+                print(i)
+            print(type(fen))
+            self.tableroFEN(fen)
             print("\n")
         elif entrada == "d":
             self.deshacer()
@@ -574,6 +579,24 @@ class Partida:
             Motor.set_position(Partida.variacion)
             #print(stockfish.get_board_visual())
             #time.sleep(2)
+
+
+
+    def tableroFEN(self, fen):
+        tablero_fen = ""
+        unicode = Partida.diccionario_unicode
+        for simbolo in fen:
+            if simbolo in unicode.keys():
+                tablero_fen += unicode[simbolo]
+            elif simbolo == " ":
+                break
+            else:
+                tablero_fen += '\n'
+
+        print(tablero_fen)
+
+
+
 
 
 
