@@ -232,21 +232,16 @@ class Partida:
         elif entrada == "a":
             self.imprimirAnalisis()
             #self.imprimirNegras()
-        elif entrada == "f":
-            print("[CPLs] FEN position:")
-            fen = Motor.get_fen_position()
-            for i in fen:
-                print(i)
-            print(type(fen))
-            self.tableroFEN(fen)
+        elif entrada == "t":
+            print("[CPLs] Tablero:")
+            self.tableroFEN()
             print("\n")
         elif entrada == "d":
             self.deshacer()
         elif entrada == "e":
             self.escribirPartida(tipo='juego')
-        elif entrada == "t":
-            print("[CPLs] Tablero:")
-            print(Motor.get_board_visual())
+#        elif entrada == "t":
+#            print(Motor.get_board_visual())
         elif entrada == "l":
             self.leerPartida(tipo='juego')
         # Si la jugada es incorrecta (Motor.is_move_correct == False ??)
@@ -581,8 +576,8 @@ class Partida:
             #time.sleep(2)
 
 
-
-    def tableroFEN(self, fen):
+    def tableroFEN(self):
+        fen = Motor.get_fen_position()
         tablero_fen = ""
         unicode = Partida.diccionario_unicode
         for simbolo in fen:
