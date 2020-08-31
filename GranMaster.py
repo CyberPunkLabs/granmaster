@@ -61,13 +61,13 @@ class Partida:
     def __init__(self):
         ### Despliega pantallas de configuracion
         #self.configuracion()
-        #self.crearPerfil()
+        self.crearPerfil()
         self.contempt = 0
 
-        self.color = 'blancas'
-        self.skill = 10
-        self.depth = 1
-        self.perfil = "prueba"
+        #self.color = 'blancas'
+        #self.skill = 10
+        #self.depth = 1
+        #self.perfil = "prueba"
 
         if self.color == 'blancas':
             jugador_blancas = self.perfil,
@@ -244,6 +244,8 @@ class Partida:
             self.deshacer()
         elif entrada == "e":
             self.escribirPartida(tipo='juego')
+        elif entrada == "p":
+            print(Motor.get_board_visual())
         elif entrada in ["b", "n"]:
             self.posicionTablero(color=entrada)
         elif entrada == "l":
