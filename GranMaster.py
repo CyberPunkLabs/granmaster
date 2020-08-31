@@ -40,7 +40,7 @@ class Partida:
 -> Introducir scroll por partida
 -> Introducir variantes
 -> Cada perfil guarda todas las partidas, ELO, etc de un jugador
-
+-> Numero de jugada en nombre partida
 '''
 
 
@@ -61,8 +61,13 @@ class Partida:
     def __init__(self):
         ### Despliega pantallas de configuracion
         #self.configuracion()
-        self.crearPerfil()
+        #self.crearPerfil()
         self.contempt = 0
+
+        self.color = 'blancas'
+        self.skill = 10
+        self.depth = 1
+        self.perfil = "prueba"
 
         if self.color == 'blancas':
             jugador_blancas = self.perfil,
@@ -231,7 +236,6 @@ class Partida:
             pass
         elif entrada == "a":
             self.imprimirAnalisis()
-            #self.imprimirNegras()
         elif entrada == "t":
             print("[CPLs] Tablero:")
             self.tableroFEN()
@@ -240,15 +244,14 @@ class Partida:
             self.deshacer()
         elif entrada == "e":
             self.escribirPartida(tipo='juego')
-#        elif entrada == "t":
-#            print(Motor.get_board_visual())
+        elif entrada in ["b", "n"]:
+            self.posicionTablero(color=entrada)
         elif entrada == "l":
             self.leerPartida(tipo='juego')
+
         # Si la jugada es incorrecta (Motor.is_move_correct == False ??)
         else:
-            self.imprimirGenerico("-> (a)nalisis", "-> (t)ablero", "-> Posicion (f)EN",
-                                  "-> (d)eshacer", "-> (e)scribir partida", "-> (l)eer partida",
-                                  dwell=2)
+            print("-> (a)nalisis\n-> (t)ablero\n-> Posicion (f)EN\n-> (d)eshacer\n-> (e)scribir partida\n-> (l)eer partida\n-> posicion (b)lancas y (n)egras")
             #self.titilar()
         Partida.jugada_correcta = False
 
@@ -580,10 +583,10 @@ class Partida:
         fen = Motor.get_fen_position()
         tablero_fen = ""
         unicode = Partida.diccionario_unicode
-        for simbolo in fen:
-            if simbolo in unicode.keys():
-                tablero_fen += unicode[simbolo]
-            elif simbolo == " ":
+        for pieza in fen:
+            if pieza in unicode.keys():
+                tablero_fen += unicode[pieza]
+            elif pieza == " ":
                 break
             else:
                 tablero_fen += '\n'
@@ -592,7 +595,42 @@ class Partida:
 
 
 
+    def posicionTablero(self, color='b'):
+        coordenadas = [
+'a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8', 'h8',
+'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7',
+'a6', 'b6', 'c6', 'd6', 'e6', 'f6', 'g6', 'h6',
+'a5', 'b5', 'c5', 'd5', 'e5', 'f5', 'g5', 'h5',
+'a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4',
+'a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'h3',
+'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2',
+'a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1'
+]
 
+        unicode = Partida.diccionario_unicode
+        fen = Motor.get_fen_position()
+        fen = fen.split(' ')
 
+        tablero = []
+        for letra in fen[0]:
+            if letra in ["1", "2", "3", "4", "5", "6", "7", "8"]:
+                tablero.extend(["." for i in range(int(letra))])
+            elif letra == "/":
+                pass
+            else:
+                tablero.append(letra)
 
+        piezas = ['k', 'q', 'r', 'b', 'n', 'p']
+
+        if color == 'b':
+            piezas = [pieza.upper() for pieza in piezas]
+
+        for pieza in piezas:
+            posicion = []
+
+            for index in range(len(tablero)):
+                if tablero[index] == pieza:
+                    posicion.append(coordenadas[index])
+
+            print("{} {}".format(unicode[pieza], posicion))
 
