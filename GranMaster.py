@@ -1,5 +1,5 @@
 ### Importa modulos requieridos por Gran Master
-import os
+#import os
 import glob
 import time
 import pickle
@@ -88,53 +88,8 @@ class Partida:
                       resultado       = '*/*')
 
 
-##################       Inicio del loop principal         #####################
-    def jugada(self):
-        if self.color == 'blancas':
-            self.imprimirPartida()
-            self.HUMANO()
-            self.REPLICANTE()
-        else:
-            self.REPLICANTE()
-            self.imprimirPartida()
-            self.HUMANO()
-
-
-    def humano(self):
-        self.imprimirPartida()
-        self.HUMANO()
-        self.imprimirPartida()
-        self.HUMANO()
-
-        
-    def apertura(self):
-        if self.color == 'blancas':
-            self.imprimirPartida()
-            self.HUMANO()
-            self.LIBRO()
-        else:
-            self.LIBRO()
-            self.imprimirPartida()
-            self.HUMANO()
-
-
 
 ##################               FUNCIONES              #####################
-    def HUMANO(self):
-        ### Espera por input de las negras y lo transforma a minusculas (para reconocimiento posterior)
-        entrada = input().lower()
-
-        if True: # Para partidas
-            # Si existe input y este es una jugada correcta
-            if (len(entrada) > 1) & (Motor.is_move_correct(entrada)):
-                Partida.jugada_correcta = True
-                Partida.variacion.append(entrada)
-                self.evaluarPosicion()
-
-
-        ### Si la jugada no es correcta, simplementa pasa
-        else:
-            pass
 
 
     def LIBRO(self, entrada):
@@ -157,29 +112,6 @@ class Partida:
             pass
 
 
-    def evaluarPosicion(self):
-        ### Mejora habilidad y evalua tablero
-        Motor.set_skill_level(20)
-        Motor.set_depth(15)
-
-        ### Fija posicion en el tablero
-        Motor.set_position(Partida.variacion)
-        evaluacion = Motor.get_evaluation()
-        if (evaluacion['value'] / 100) >= 0:
-            Partida.evaluacion = "+{:.2f}".format(evaluacion['value'] / 100)
-        else:
-            Partida.evaluacion = "{:.2f}".format(evaluacion['value'] / 100)
-
-        ### Vuelve a habilidad por defecto
-        Motor.set_skill_level(self.skill)
-        Motor.set_depth(self.depth)
-
-        ### Vuelve a fijar posicion en el tablero
-        Motor.set_position(Partida.variacion)
-        #evaluacion = Motor.get_evaluation()
-        #Partida.evaluacion = evaluacion #['value'] / 100
-
-
 
     def manipularOpciones(self, entrada):
         if entrada == "1245":
@@ -195,6 +127,7 @@ class Partida:
         elif entrada == "e":
             self.escribirPartida(tipo='juego')
         elif entrada == "p":
+            Motor.set_position(Partida.variacion)
             print(Motor.get_board_visual())
         elif entrada in ["b", "n"]:
             self.posicionTablero(color=entrada)
@@ -237,6 +170,7 @@ class Partida:
                     else:
                         evaluacion.append("{}".format(temp))
                 if linea[palabra] == "pv":
+
                     variacion.append(linea[palabra+1:])
         self.imprimirGenerico("[Análisis]",
                               "{} {}".format(evaluacion[0], variacion[0]),
@@ -308,6 +242,7 @@ class Partida:
         line6 = "Ingresa jugada..."
 
         self.imprimirGenerico(line1, line2, line3, line4, line5, line6, seleccion=False)
+        
 
 
 
@@ -532,6 +467,7 @@ class Partida:
 
 
     def tableroFEN(self):
+        Motor.set_position(Partida.variacion)
         fen = Motor.get_fen_position()
         tablero_fen = ""
         unicode = Partida.diccionario_unicode
@@ -560,6 +496,8 @@ class Partida:
 ]
 
         unicode = Partida.diccionario_unicode
+
+        Motor.set_position(Partida.variacion)
         fen = Motor.get_fen_position()
         fen = fen.split(' ')
 

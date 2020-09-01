@@ -22,28 +22,26 @@ print('[CPLs] Parametros de TYRELL:')
 print(TYRELL.get_parameters())
 
 
-
 tipo = 'partida'
 if tipo == 'partida':
     reiniciar = False
     while not reiniciar:
         Partida.imprimirPartida()
         entrada = input('Juega: ').lower()
-        Partida.variacion.append(entrada)
+        
         if (len(entrada) > 0) & REPLICANTE.is_move_correct(entrada):
+            Partida.jugada_correcta = True
+            Partida.variacion.append(entrada)
+            Partida.n_movimiento += 1
             REPLICANTE.set_position(Partida.variacion)
             com = REPLICANTE.get_best_move()
             Partida.variacion.append(com)
-            TYRELL.set_position(Partida.variacion)
-            evaluacion = TYRELL.get_evaluation()
-            if (evaluacion['value'] / 100) >= 0:
-                Partida.evaluacion = "+{:.2f}".format(evaluacion['value'] / 100)
-            else:
-                Partida.evaluacion = "{:.2f}".format(evaluacion['value'] / 100)
-            print(Partida.evaluacion)
+            Partida.n_movimiento += 1
+            Partida.n_jugada += 1
+
         else:
             Partida.manipularOpciones(entrada)
-
+            #Partida.jugada_correcta = False
         
 
 elif tipo == 'humano':
