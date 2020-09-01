@@ -61,20 +61,20 @@ class Partida:
     def __init__(self):
         ### Despliega pantallas de configuracion
         #self.configuracion()
-        self.crearPerfil()
+        #self.crearPerfil()
         self.contempt = 0
 
-        #self.color = 'blancas'
+        self.color = 'blancas'
         #self.skill = 10
         #self.depth = 1
-        #self.perfil = "prueba"
+        self.perfil = "prueba"
 
         if self.color == 'blancas':
             jugador_blancas = self.perfil,
-            jugador_negras = 'Replicante{}.{}'.format(self.depth, self.skill),
+            jugador_negras = 'Replicante' #{}.{}'.format(self.depth, self.skill),
         else:
             jugador_negras = self.perfil,
-            jugador_blancas = 'Replicante{}.{}'.format(self.depth, self.skill),
+            jugador_blancas = 'Replicante' #{}.{}'.format(self.depth, self.skill),
 
         ### Construye header con info sobre la partida (por implementar)
         now = datetime.now()
@@ -91,30 +91,30 @@ class Partida:
 ##################       Inicio del loop principal         #####################
     def jugada(self):
         if self.color == 'blancas':
-            ### Imprime info (para desarrolladores)
-            if Partida.imprimir_tablero:
-                print("[CPLs] Tablero:")
-                print(Motor.get_board_visual())
             self.imprimirPartida()
-            print("[CPLs] Partida: {}".format(Partida.variacion))
-
             self.HUMANO()
             self.REPLICANTE()
-            #print("[CPLs] Jugada correcta? {}".format(Partida.jugada_correcta))
-
         else:
-            #print("[CPLs] Jugada correcta? {}".format(Partida.jugada_correcta))
-
-
             self.REPLICANTE()
-
-            ### Imprime info (para desarrolladores)
-            if Partida.imprimir_tablero:
-                print("[CPLs] Tablero:")
-                print(Motor.get_board_visual())
             self.imprimirPartida()
-            print("[CPLs] Partida: {}".format(Partida.variacion))
+            self.HUMANO()
 
+
+    def humano(self):
+        self.imprimirPartida()
+        self.HUMANO()
+        self.imprimirPartida()
+        self.HUMANO()
+
+        
+    def apertura(self):
+        if self.color == 'blancas':
+            self.imprimirPartida()
+            self.HUMANO()
+            self.LIBRO()
+        else:
+            self.LIBRO()
+            self.imprimirPartida()
             self.HUMANO()
 
 
@@ -131,56 +131,6 @@ class Partida:
                 Partida.variacion.append(entrada)
                 self.evaluarPosicion()
 
-                ### Añade movimiento y jugada (revisar)
-                Partida.n_movimiento += 1
-                Partida.n_jugada += 1
-                #self.escribirPartida(tipo='respaldo')
-                #self.imprimirNegras()
-
-            else:
-                self.manipularOpciones(entrada)
-
-        if False: # Para libro de aperturas
-            if entrada == Libro.apertura[Partida.n_movimiento]:
-                pass
-
-        return entrada
-
-
-    def REPLICANTE(self):
-        if Partida.jugada_correcta:
-            self.imprimirGenerico("Replicante {}.{}".format(self.skill, self.depth),
-                                  "está pensando...", dwell=1)
-
-            if Partida.n_jugada == 1:
-                com = random.choice(Partida.aperturas['top10'])
-
-            ### Si la jugada es > 1, juega Stockfish
-            else:
-                clock = time.time()
-
-                ### Toma jugada de best_move dado nivel y profundidad
-                com = Motor.get_best_move()
-                print("COM: {}".format(com))
-                print("Type COM: {}".format(type(com)))
-                if com == None:
-                    self.header['resultado'] = '+/-'
-                    com = "MATE!"
-                    self.imprimirGenerico("MATE !!", dwell=5)
-                    self.escribirPartida(tipo='juego')
-                ### Alternativamente, podria tomarla de best_move_time dado limite temporal
-                #blancas = Motor.get_best_move_time(2000)
-                if True:
-                    print("[CPLs] Jugada en {} s.".format(time.time() - clock))
-
-	    ### Agrega la jugada al arbol de la partida
-            Partida.variacion.append(com)
-            Partida.n_movimiento += 1
-            if Partida.verbose:
-                print("[CPLs] n movimiento: {}".format(Partida.n_movimiento))
-
-            self.evaluarPosicion()
-            #self.imprimirNegras()
 
         ### Si la jugada no es correcta, simplementa pasa
         else:

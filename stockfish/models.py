@@ -10,13 +10,13 @@ from typing import Any, List, Optional
 
 DEFAULT_STOCKFISH_PARAMS = {
     "Write Debug Log": "false",
-    "Contempt": 0,
+    "Contempt": -5,
     "Min Split Depth": 0,
     "Threads": 1,
     "Ponder": "false",
     "Hash": 16,
-    "MultiPV": 4,
-    "Skill Level": 10,
+    "MultiPV": 1,
+    "Skill Level": 20,
     "Move Overhead": 30,
     "Minimum Thinking Time": 20,
     "Slow Mover": 80,
