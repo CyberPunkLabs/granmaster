@@ -113,34 +113,6 @@ class Partida:
 
 
 
-    def manipularOpciones(self, entrada):
-        if entrada == "1245":
-            pass
-        elif entrada == "a":
-            self.imprimirAnalisis()
-        elif entrada == "t":
-            print("[CPLs] Tablero:")
-            self.tableroFEN()
-            print("\n")
-        elif entrada == "d":
-            self.deshacer()
-        elif entrada == "e":
-            self.escribirPartida(tipo='juego')
-        elif entrada == "p":
-            Motor.set_position(Partida.variacion)
-            print(Motor.get_board_visual())
-        elif entrada in ["b", "n"]:
-            self.posicionTablero(color=entrada)
-        elif entrada == "l":
-            self.leerPartida(tipo='juego')
-
-        # Si la jugada es incorrecta (Motor.is_move_correct == False ??)
-        else:
-            print("-> (a)nalisis\n-> (t)ablero\n-> Posicion (f)EN\n-> (d)eshacer\n-> (e)scribir partida\n-> (l)eer partida\n-> posicion (b)lancas y (n)egras")
-            #self.titilar()
-        Partida.jugada_correcta = False
-
-
     ### Imprimir analisis
     def imprimirAnalisis(self):
         Motor.set_skill_level(20)
@@ -194,9 +166,6 @@ class Partida:
         if len(Partida.variacion) > 2:
             # Borra las ultimas dos
             del Partida.variacion[-2:]
-
-            # Reevalua posicion
-            self.evaluarPosicion()
 
             Partida.n_jugada     -= 1
             Partida.n_movimiento -= 2
