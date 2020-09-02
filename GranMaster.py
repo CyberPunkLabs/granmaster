@@ -12,7 +12,11 @@ from stockfish import Stockfish
 
 
 ### Declara stockfish
-Motor = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0, 'MultiPV': 4}) # Mismos valores que default
+
+if os.name == 'nt':
+    Motor = Stockfish("./engine/stockfish_20011801_x64.exe", parameters={'Contempt': 0, 'MultiPV': 4}) # Mismos valores que default
+else:
+    Motor = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0, 'MultiPV': 4}) # Mismos valores que default
 
 print("\n\n########### INICIO DEL JUEGO " + "############\n")
 print('[CPLs] Parametros de Stockfish:')
