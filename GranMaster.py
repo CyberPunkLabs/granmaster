@@ -6,19 +6,17 @@ import pickle
 import random
 import numpy as np
 from datetime import datetime
-
 #from lcd5110 import LCD5110
-from stockfish import Stockfish
+from models import Stockfish
 
+### Crea a Tyrell, como instancia de Stockfish
+TYRELL = Stockfish("/usr/games/stockfish", parameters={"MultiPV": 4, "Contempt": 0})
+TYRELL.set_depth(20)
+TYRELL.set_skill_level(20)
 
-### Declara stockfish
-Motor = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0, 'MultiPV': 4}) # Mismos valores que default
-
-print("\n\n########### INICIO DEL JUEGO " + "############\n")
-print('[CPLs] Parametros de Stockfish:')
-
-### Fija motor en simple, para hacer pruebas
-print(Motor.get_parameters())
+### Imprime parametros de Tyrell
+print("[CPLs] Parametros de Tyrell:")
+print(TYRELL.get_parameters())
 #lcd = LCD5110()
 
 
@@ -60,13 +58,9 @@ class Partida:
     ### Pantalla de inicio. Revisar si adecuado declararla en __init__
     def __init__(self):
         ### Despliega pantallas de configuracion
-        #self.configuracion()
         #self.crearPerfil()
         self.contempt = 0
-
         self.color = 'blancas'
-        #self.skill = 10
-        #self.depth = 1
         self.perfil = "prueba"
 
         if self.color == 'blancas':
@@ -91,18 +85,17 @@ class Partida:
 
 ##################               FUNCIONES              #####################
 
-
+    ### Define libro de apertura
     def LIBRO(self, entrada):
         if entrada == Partida.apertura[Partida.n_movimiento]:
             self.imprimirGenerico('Jugando', 'apertura...', dwell=1)
 
-            ### Toma jugada de best_move dado nivel y profundidad
+            ### Toma jugada desde libro de aperturas
             com = Partida.apertura[Partida.n_movimiento]
 
 	    ### Agrega la jugada al arbol de la partida
             Partida.variacion.append(com)
             Partida.n_movimiento += 1
-            print("[CPLs] n movimiento: {}".format(Partida.n_movimiento))
 
             self.evaluarPosicion()
             #self.imprimirNegras()
@@ -112,19 +105,14 @@ class Partida:
             pass
 
 
-
     ### Imprimir analisis
     def imprimirAnalisis(self):
-        Motor.set_skill_level(20)
-        Motor.set_depth(15)
-        if Partida.verbose:
-            print(Motor.get_parameters())
-
-        all = Motor.get_analysis()
+        TYRELL.set_position(Partida.variacion)
+        analisis = TYRELL.get_analysis()
 
         info = []
-        for line in all:
-            splitted_line = line.split(" ")
+        for linea in analisis:
+            splitted_line = linea.split(" ")
             if splitted_line[0] == "info":
                 info.append(splitted_line)
 
@@ -150,11 +138,6 @@ class Partida:
                               "{} {}".format(evaluacion[2], variacion[2]),
                               "{} {}".format(evaluacion[3], variacion[3]),
                               dwell=2)
-        #print(splitted_line)
-        Motor.set_skill_level(self.skill)
-        Motor.set_depth(self.depth)
-        if Partida.verbose:
-            print(Motor.get_parameters())
         print("\n")
 
 
@@ -251,7 +234,7 @@ class Partida:
                 self.imprimirGenerico('Opción incorrecta!', dwell=1)
                 continue
             if (self.skill >= 0) & (self.skill <= 20):
-                Motor.set_skill_level(self.skill)
+                TYRELL.set_skill_level(self.skill)
                 self.imprimirGenerico('Replicante', 'Skill level: {}.'.format(self.skill), dwell=0.5)
                 break
             else:
@@ -268,7 +251,7 @@ class Partida:
                 self.imprimirGenerico('Opción incorrecta!', dwell=1)
                 continue
             if (self.depth >= 0) & (self.depth <= 15):
-                Motor.set_depth(self.depth)
+                TYRELL.set_depth(self.depth)
                 self.imprimirGenerico('Replicante', 'Depth {}.'.format(self.depth), dwell=0.5)
                 break
             else:
@@ -436,8 +419,8 @@ class Partida:
 
 
     def tableroFEN(self):
-        Motor.set_position(Partida.variacion)
-        fen = Motor.get_fen_position()
+        TYRELL.set_position(Partida.variacion)
+        fen = TYRELL.get_fen_position()
         tablero_fen = ""
         unicode = Partida.diccionario_unicode
         for pieza in fen:
@@ -466,8 +449,8 @@ class Partida:
 
         unicode = Partida.diccionario_unicode
 
-        Motor.set_position(Partida.variacion)
-        fen = Motor.get_fen_position()
+        TYRELL.set_position(Partida.variacion)
+        fen = TYRELL.get_fen_position()
         fen = fen.split(' ')
 
         tablero = []
