@@ -9,10 +9,19 @@ from datetime import datetime
 #from lcd5110 import LCD5110
 from models import Stockfish
 
+<<<<<<< HEAD
 ### Crea a Tyrell, como instancia de Stockfish
 TYRELL = Stockfish("/usr/games/stockfish", parameters={"MultiPV": 4, "Contempt": 0})
 TYRELL.set_depth(20)
 TYRELL.set_skill_level(20)
+=======
+### Declara stockfish
+
+if os.name == 'nt':
+    Motor = Stockfish("./engine/stockfish_20011801_x64.exe", parameters={'Contempt': 0, 'MultiPV': 4}) # Mismos valores que default
+else:
+    Motor = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0, 'MultiPV': 4}) # Mismos valores que default
+>>>>>>> d61030881642033ef33d961d657a2757eee5d3f3
 
 ### Imprime parametros de Tyrell
 print("[CPLs] Parametros de Tyrell:")
