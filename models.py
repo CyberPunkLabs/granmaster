@@ -185,6 +185,9 @@ class Stockfish:
         else:  # stockfish shows advantage relative to current player, convention is to do white positive
             compare = -1 # ORIGINALMENTE -1 !!
         self._put("position " + fen + "\n go")
+        ### LINEA AÑADIDA POR CPLs
+        self._is_ready()
+        
         all = []
         while True:
             text = self._read_line()

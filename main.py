@@ -1,13 +1,26 @@
 #!/usr/bin/env python3
 
+'''
+
+[Pendientes]
+-> Auditar la evaluacion de la jugada. Intentar actualizarla cada ej 3 s 
+-> Traducir a ELO
+-> Entrenador de aperturas
+-> Que seleccione dificultad Stockfish segun ELO participante
+-> Introducir scroll por partida
+-> Introducir variantes
+-> Cada perfil guarda todas las partidas, ELO, etc de un jugador
+-> Numero de jugada en nombre partida
+
+'''
+
+
 # Modules
 from models import Stockfish
 from GranMaster import Partida
-from GranMaster import TYRELL
 import random
 
 Partida = Partida()
-#TYRELL  = TYRELL()
 #Partida.crearPerfil()
 
 Partida.depth = 1
@@ -23,22 +36,19 @@ print(REPLICANTE.get_parameters())
 
 
 def opciones(entrada):
-    #if entrada == "a":
-    #    print(Partida.variacion)
-    #    evaluacion = TYRELL(Partida.variacion)
-    #    print(evaluacion)
-        
-    #elif entrada == "t":
-    #    print("[CPLs] Tablero:")
-    #    Partida.tableroFEN()
-    #    print("\n")
-    if entrada == "d":
+    if entrada == "a":
+        Partida.imprimirAnalisis()
+    elif entrada == "t":
+        print("[CPLs] Tablero:")
+        Partida.imprimirTablero()
+        print("\n")
+    elif entrada == "d":
         Partida.deshacer()
     elif entrada == "e":
         Partida.escribirPartida(tipo='juego')
-    #elif entrada == "p":
-    #    REPLICANTE.set_position(Partida.variacion)
-    #    print(REPLICANTE.get_board_visual())
+    elif entrada == "p":
+        REPLICANTE.set_position(Partida.variacion)
+        print(REPLICANTE.get_board_visual())
     elif entrada in ["b", "n"]:
         Partida.posicionTablero(color=entrada)
     elif entrada == "l":

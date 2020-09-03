@@ -29,18 +29,7 @@ class Partida:
 20200825 -> Introduce funcionalidad de analisis modificando script de stockfish
          -> Script de stockfish queda almacenado en la misma carpeta de GranMaster
 
-
-[Pendientes]
--> Auditar la evaluacion de la jugada. Intentar actualizarla cada ej 3 s 
--> Traducir a ELO
--> Entrenador de aperturas
--> Que seleccione dificultad Stockfish segun ELO participante
--> Introducir scroll por partida
--> Introducir variantes
--> Cada perfil guarda todas las partidas, ELO, etc de un jugador
--> Numero de jugada en nombre partida
 '''
-
 
     ### Declara variables basicas
     aperturas = pickle.load(open('basesdatos/libroAperturas.gm', 'rb'))
@@ -80,7 +69,6 @@ class Partida:
                       jugador_blancas = jugador_blancas,
                       jugador_negras  = jugador_negras,
                       resultado       = '*/*')
-
 
 
 ##################               FUNCIONES              #####################
@@ -162,13 +150,23 @@ class Partida:
 
     ### Imprimir pantalla para negras
     def imprimirPartida(self):
+        evaluacion = TYRELL.get_evaluation()
+        evaluacion = evaluacion['value'] / 100
+        if self.color == 'negras':
+            evaluacion = evaluacion * -1
+        if evaluacion >= 0:
+            Partida.evaluacion = "+{}".format(evaluacion)
+        else:
+            Partida.evaluacion = "{}".format(evaluacion)
+
+        print(Partida.evaluacion)
         self.formatearPartida()
 
         if self.color == 'blancas':
             if Partida.n_jugada == 1:
                 line2 = " 1. {} {}".format(Partida.ultimas[0], Partida.ultimas[1])
                 line3 = " 2. {} {}".format(Partida.ultimas[2], Partida.ultimas[3])
-                Partida.evaluacion = " "
+                #Partida.evaluacion = " "
             elif Partida.n_jugada == 2:
                 line2 = " 1. {} {}".format(Partida.ultimas[0], Partida.ultimas[1])
                 line3 = " 2. {} {}".format(Partida.ultimas[2], Partida.ultimas[3])
@@ -180,7 +178,7 @@ class Partida:
             if Partida.n_jugada == 1:
                 line2 = " 1. {} {}".format(Partida.ultimas[0], Partida.ultimas[1])
                 line3 = " 2. {} {}".format(Partida.ultimas[2], Partida.ultimas[3])
-                Partida.evaluacion = " "
+                #Partida.evaluacion = " "
             else:
                 line2 = " {}. {} {}".format(Partida.n_jugada - 1, Partida.ultimas[0], Partida.ultimas[1])
                 line3 = " {}. {} {}".format(Partida.n_jugada - 0, Partida.ultimas[2], Partida.ultimas[3])
@@ -413,12 +411,12 @@ class Partida:
                 self.imprimirGenerico("La opción {}".format(opcion), "Es incorrecta.", dwell=2)
                 self.crearPerfil()
 
-            Motor.set_position(Partida.variacion)
+            TYRELL.set_position(Partida.variacion)
             #print(stockfish.get_board_visual())
             #time.sleep(2)
 
 
-    def tableroFEN(self):
+    def imprimirTablero(self):
         TYRELL.set_position(Partida.variacion)
         fen = TYRELL.get_fen_position()
         tablero_fen = ""
