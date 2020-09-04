@@ -237,7 +237,7 @@ class Partida:
                 self.imprimirGenerico('Opción incorrecta!', dwell=1)
                 continue
             if (self.skill >= 0) & (self.skill <= 20):
-                TYRELL.set_skill_level(self.skill)
+                #TYRELL.set_skill_level(self.skill)
                 self.imprimirGenerico('Replicante', 'Skill level: {}.'.format(self.skill), dwell=0.5)
                 break
             else:
@@ -254,7 +254,7 @@ class Partida:
                 self.imprimirGenerico('Opción incorrecta!', dwell=1)
                 continue
             if (self.depth >= 0) & (self.depth <= 15):
-                TYRELL.set_depth(self.depth)
+                #TYRELL.set_depth(self.depth)
                 self.imprimirGenerico('Replicante', 'Depth {}.'.format(self.depth), dwell=0.5)
                 break
             else:
@@ -270,7 +270,7 @@ class Partida:
             except ValueError:
                 self.imprimirGenerico('Opción incorrecta!', dwell=1)
                 continue
-            if (opcion >= 1) & (opcion <= 3):
+            if opcion == 1:
                 if opcion == 1:
                     self.color = 'blancas'
                 elif opcion == 2:
@@ -282,7 +282,7 @@ class Partida:
                 break
 
             else:
-                self.imprimirGenerico('Opción incorrecta!', dwell=2)
+                self.imprimirGenerico('Opción no implementada...', dwell=2)
 
 
 
