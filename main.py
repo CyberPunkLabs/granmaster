@@ -21,12 +21,8 @@ from GranMaster import Partida
 import random
 
 Partida = Partida()
-#Partida.crearPerfil()
-
-Partida.depth = 1
-Partida.skill = 3
+Partida.crearPerfil()
 contempt = random.randint(-100, 100)
-print("Skill = {}".format(Partida.skill))
 
 REPLICANTE = Stockfish(parameters={"Contempt": contempt, "MultiPV": 1})
 REPLICANTE.set_depth(Partida.depth)
