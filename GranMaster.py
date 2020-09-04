@@ -16,9 +16,9 @@ TYRELL.set_skill_level(20)
 ### Declara stockfish
 
 if os.name == 'nt':
-    Motor = Stockfish("./engine/stockfish_20011801_x64.exe", parameters={'Contempt': 0, 'MultiPV': 4}) # Mismos valores que default
-else:
-    Motor = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0, 'MultiPV': 4}) # Mismos valores que default
+    TYRELL = Stockfish("./engine/stockfish_20011801_x64.exe", parameters={'Contempt': 0, 'MultiPV': 4}) # Mismos valores que default
+else: ### definir directorio propio !!
+    TYRELL = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0, 'MultiPV': 4}) # Mismos valores que default
 
 ### Imprime parametros de Tyrell
 print("[CPLs] Parametros de Tyrell:")
