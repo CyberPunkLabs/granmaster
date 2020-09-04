@@ -9,16 +9,15 @@ from datetime import datetime
 #from lcd5110 import LCD5110
 from models import Stockfish
 
-### Crea a Tyrell, como instancia de Stockfish
-TYRELL = Stockfish("/usr/games/stockfish", parameters={"MultiPV": 4, "Contempt": 0})
+
+### Crea a Tyrell, como instancia de Stockfish, con:
+### PV: 4; arrogancia: 0; habilidad: 20; profundidad de analisis = 20 
+if os.name == 'nt':
+    TYRELL = Stockfish("./engine/stockfish_20011801_x64.exe", parameters={"MultiPV": 4, "Contempt": 0})
+else: ### definir directorio propio !!
+    TYRELL = Stockfish("/usr/games/stockfish", parameters={"MultiPV": 4, "Contempt": 0})
 TYRELL.set_depth(20)
 TYRELL.set_skill_level(20)
-### Declara stockfish
-
-if os.name == 'nt':
-    TYRELL = Stockfish("./engine/stockfish_20011801_x64.exe", parameters={'Contempt': 0, 'MultiPV': 4}) # Mismos valores que default
-else: ### definir directorio propio !!
-    TYRELL = Stockfish("/usr/games/stockfish", parameters={'Contempt': 0, 'MultiPV': 4}) # Mismos valores que default
 
 ### Imprime parametros de Tyrell
 print("[CPLs] Parametros de Tyrell:")
@@ -54,16 +53,16 @@ class Partida:
     def __init__(self):
         ### Despliega pantallas de configuracion
         #self.crearPerfil()
-        self.contempt = 0
+        #self.arrogancia = 0
         self.color = 'blancas'
         self.perfil = "prueba"
 
         if self.color == 'blancas':
             jugador_blancas = self.perfil,
-            jugador_negras = 'Replicante' #{}.{}'.format(self.depth, self.skill),
+            jugador_negras = 'Replicante' #{}.{}'.format(self.profundidad_analisis, self.habilidad),
         else:
             jugador_negras = self.perfil,
-            jugador_blancas = 'Replicante' #{}.{}'.format(self.depth, self.skill),
+            jugador_blancas = 'Replicante' #{}.{}'.format(self.profundidad_analisis, self.habilidad),
 
         ### Construye header con info sobre la partida (por implementar)
         now = datetime.now()
@@ -85,10 +84,10 @@ class Partida:
             self.imprimirGenerico('Jugando', 'apertura...', dwell=1)
 
             ### Toma jugada desde libro de aperturas
-            com = Partida.apertura[Partida.n_movimiento]
+            jugada = Partida.apertura[Partida.n_movimiento]
 
 	    ### Agrega la jugada al arbol de la partida
-            Partida.variacion.append(com)
+            Partida.variacion.append(jugada)
             Partida.n_movimiento += 1
 
             self.evaluarPosicion()
@@ -137,11 +136,11 @@ class Partida:
 
     ### Deshacer jugada
     def deshacer(self):
-        Partida.jugada_correcta = False
+        #Partida.jugada_correcta = False
 
         ### Si la partida tiene mas de 1 movimiento:
         if len(Partida.variacion) > 2:
-            # Borra las ultimas dos
+            # Borra los ultimos dos
             del Partida.variacion[-2:]
 
             Partida.n_jugada     -= 1
@@ -149,21 +148,24 @@ class Partida:
 
         # Si no hay jugadas suficientes para deshacer
         else:
-            self.imprimirGenerico("No hay mas jugadas", "que deshacer!", dwell=2)
+            self.imprimirGenerico("No hay más jugadas", "que deshacer!", dwell=2)
 
+        # Reimprime la partida
         self.imprimirPartida()
 
 
-    ### Imprimir pantalla para negras
+    ### Imprimir pantalla principal, con la informacion central de la partida
     def imprimirPartida(self):
+        ### Tyrell evalua la posicion en centipeones
         evaluacion = TYRELL.get_evaluation()
         evaluacion = evaluacion['value'] / 100
         if self.color == 'negras':
             evaluacion = evaluacion * -1
+        # Estandariza el string de salida a +/-x.xx
         if evaluacion >= 0:
-            Partida.evaluacion = "+{}".format(evaluacion)
+            Partida.evaluacion = "+{:.2f}".format(evaluacion)
         else:
-            Partida.evaluacion = "{}".format(evaluacion)
+            Partida.evaluacion = "{:.2f}".format(evaluacion)
 
         self.formatearPartida()
 
@@ -191,9 +193,9 @@ class Partida:
         line1 = " Analisis: {}".format(Partida.evaluacion)
         line4 = " "
         if self.color == 'blancas':
-            line5 = "{} - Replicante{}.{}".format(self.perfil, self.skill, self.depth)
+            line5 = "{} - Replicante{}.{}".format(self.perfil, self.habilidad, self.profundidad_analisis)
         else:
-            line5 = "Replicante{}.{} - {}".format(self.skill, self.depth, self.perfil)
+            line5 = "Replicante{}.{} - {}".format(self.habilidad, self.profundidad_analisis, self.perfil)
         line6 = "Ingresa jugada..."
 
         self.imprimirGenerico(line1, line2, line3, line4, line5, line6, seleccion=False)
@@ -229,16 +231,16 @@ class Partida:
     def configuracion(self):
         ### Inteligencia UCI (Modelo replicante)
         while True:
-            self.imprimirGenerico('Skill level', '(0-20)')
+            self.imprimirGenerico('Habilidad Replicante', '(0-20)')
             opcion = input()
             try:
-                self.skill = int(opcion)
+                self.habilidad = int(opcion)
             except ValueError:
                 self.imprimirGenerico('Opción incorrecta!', dwell=1)
                 continue
-            if (self.skill >= 0) & (self.skill <= 20):
-                #TYRELL.set_skill_level(self.skill)
-                self.imprimirGenerico('Replicante', 'Skill level: {}.'.format(self.skill), dwell=0.5)
+            if (self.habilidad >= 0) & (self.habilidad <= 20):
+                #TYRELL.set_skill_level(self.habilidad)
+                self.imprimirGenerico('Replicante', 'Habilidad: {}.'.format(self.habilidad), dwell=0.5)
                 break
             else:
                 self.imprimirGenerico('Opción incorrecta!', dwell=2)
@@ -246,16 +248,16 @@ class Partida:
 
         ### Version replicante (profundidad jugada)
         while True:
-            self.imprimirGenerico('Depth','(0-15)')
+            self.imprimirGenerico('profundidad_analisis','(0-15)')
             opcion = input()
             try:
-                self.depth = int(opcion)
+                self.profundidad_analisis = int(opcion)
             except ValueError:
                 self.imprimirGenerico('Opción incorrecta!', dwell=1)
                 continue
-            if (self.depth >= 0) & (self.depth <= 15):
-                #TYRELL.set_depth(self.depth)
-                self.imprimirGenerico('Replicante', 'Depth {}.'.format(self.depth), dwell=0.5)
+            if (self.profundidad_analisis >= 0) & (self.profundidad_analisis <= 15):
+                #TYRELL.set_depth(self.profundidad_analisis)
+                self.imprimirGenerico('Replicante', 'profundidad_analisis {}.'.format(self.profundidad_analisis), dwell=0.5)
                 break
             else:
                 self.imprimirGenerico('Opción incorrecta!', dwell=1)
@@ -314,8 +316,8 @@ class Partida:
         # Crea diccionario con header y arbol (implementar PGN)
         partida = dict(header=self.header, variacion=Partida.variacion, n_jugada=Partida.n_jugada,
                            n_movimiento=Partida.n_movimiento, evaluacion=Partida.evaluacion,
-                           jugada_correcta=Partida.jugada_correcta, color=self.color, skill=self.skill,
-                           depth=self.depth, contempt=self.contempt, pgn = [])
+                           jugada_correcta=Partida.jugada_correcta, color=self.color, habilidad=self.habilidad,
+                           profundidad_analisis=self.profundidad_analisis, arrogancia=self.arrogancia, pgn = [])
 
         # Nombre del perfil donde guardar la partida
         self.imprimirGenerico("Escribe nombre perfil:", "a: (A)trás")
@@ -330,9 +332,9 @@ class Partida:
         opcion = input()
         if opcion != "a":
             if self.color == 'blancas':
-                nombre_partida = "{}-Replicante{}.{} {}".format(opcion, partida['depth'], partida['skill'], partida['header']['fecha'])
+                nombre_partida = "{}-Replicante{}.{} {}".format(opcion, partida['profundidad_analisis'], partida['habilidad'], partida['header']['fecha'])
             else:
-                nombre_partida = "Replicante{}.{}-{} {}".format(partida['depth'], partida['skill'], opcion, partida['header']['fecha'])
+                nombre_partida = "Replicante{}.{}-{} {}".format(partida['profundidad_analisis'], partida['habilidad'], opcion, partida['header']['fecha'])
 
             try:
                 diccionario = pickle.load(open('perfiles/{}.gm'.format(opcion), 'rb'))
@@ -406,11 +408,11 @@ class Partida:
                 Partida.n_movimiento    = diccionario['n_movimiento']
                 Partida.evaluacion      = diccionario['evaluacion']
                 Partida.jugada_correcta = diccionario['jugada_correcta']
-                self.color              = diccionario['color']
-                self.skill              = diccionario['skill']
-                self.depth              = diccionario['depth']
-                self.contempt           = diccionario['contempt']
-                self.perfil             = nombre_perfil
+                self.color                  = diccionario['color']
+                self.habilidad              = diccionario['habilidad']
+                self.profundidad_analisis   = diccionario['profundidad_analisis']
+                self.arrogancia             = diccionario['arrogancia']
+                self.perfil                 = nombre_perfil
                 self.imprimirGenerico("Perfil {}".format(self.perfil), "Partida {}".format(partida), "Cargados exitosamente!")
             else:
                 self.imprimirGenerico("La opción {}".format(opcion), "Es incorrecta.", dwell=2)
