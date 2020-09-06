@@ -10,7 +10,8 @@
 -> Introducir scroll por partida
 -> Introducir variantes
 -> Cada perfil guarda todas las partidas, ELO, etc de un jugador
--> Numero de jugada en nombre partida
+-> Numero de jugadas en nombre partida (para por ej reconocer las 
+   partidas mas largas)
 
 '''
 
@@ -20,62 +21,54 @@ from models import Stockfish
 from GranMaster import Partida
 import random
 
+### Crea  partida
 Partida = Partida()
+# Imprime pantalla para crear perfiles o cargar una nueva partida
 Partida.crearPerfil()
-contempt = random.randint(-100, 100)
 
-REPLICANTE = Stockfish(parameters={"Contempt": contempt, "MultiPV": 1})
-REPLICANTE.set_depth(Partida.depth)
-REPLICANTE.set_skill_level(Partida.skill)
-print('[CPLs] Parametros de REPLICANTE:')
-print(REPLICANTE.get_parameters())
+# Define la arrogancia del Replicante. -100 implica un juego mas
+# bien timido y defensivo, mientras +100 implica un juego mas
+# arriesgado y temerario. El nivel de arrogancia de los Replicantes
+# es una caracteristica que aleatoria que el humano no puede manipular.
+arrogancia = random.randint(-100, 100)
 
+if not Partida.tipo == 'apertura':
+    ### Crea un Replicante
+    REPLICANTE = Stockfish(parameters={"Contempt": arrogancia, "MultiPV": 1})
+    # Fija profundidad y habilidad segun eleccion del humano,
+    # (cuando no es una perfil cargado)
+    REPLICANTE.set_depth(Partida.profundidad_analisis)
+    REPLICANTE.set_skill_level(Partida.habilidad)
 
-def opciones(entrada):
-    if entrada == "a":
-        Partida.imprimirAnalisis()
-    elif entrada == "t":
-        print("[CPLs] Tablero:")
-        Partida.imprimirTablero()
-        print("\n")
-    elif entrada == "d":
-        Partida.deshacer()
-    elif entrada == "e":
-        Partida.escribirPartida(tipo='juego')
-    elif entrada == "p":
-        REPLICANTE.set_position(Partida.variacion)
-        print(REPLICANTE.get_board_visual())
-    elif entrada in ["b", "n"]:
-        Partida.posicionTablero(color=entrada)
-    elif entrada == "l":
-        Partida.leerPartida(tipo='juego')
-
-    # Si la jugada es incorrecta (Motor.is_move_correct == False ??)
-    else:
-        print('''
-                 -> (a)nalisis
-                 -> (t)ablero
-                 -> Posicion (f)EN
-                 -> (d)eshacer
-                 -> (e)scribir partida
-                 -> (l)eer partida
-                 -> posicion (b)lancas y (n)egras''')
-        
-    #self.titilar()
-    Partida.jugada_correcta = False
+    # Para desarrolladores
+    print('[CPLs] Parametros de REPLICANTE:')
+    print(REPLICANTE.get_parameters())
 
 
 
-tipo = 'blancas'
-if tipo == 'blancas':
+### Define tipo de partida, entre:
+### blancas: Humano - Replicante
+### negras: Replicante - Humano
+### humano: Humano - Humano
+### replicante: Replicante - Replicante
+### apertura: Humano - Libro de aperturas (Modern Chess Openings - de Firmian)
+### tutor: Humano - My System (My System - Nimwitich)
+### leyendas: Humano - Partidas legendarias 
+if Partida.tipo == 'blancas':
     reiniciar = False
     while not reiniciar:
+        # Ordena la informacion relevante sobre la partida
+        # y la formatea para imprimirla en la LCD 84x48
         Partida.imprimirPartida()
+        # Espera y registra la jugada de humano
         entrada = input().lower()
 
+        # Si la jugada es correcta:
         if (len(entrada) > 1) & (REPLICANTE.is_move_correct(entrada)):
             Partida.jugada_correcta = True
+            # Añade la jugada a la lista
             Partida.variacion.append(entrada)
+            # Suma un movimiento (ej 1. e2e5)
             Partida.n_movimiento += 1
 
             if Partida.jugada_correcta:
@@ -83,27 +76,35 @@ if tipo == 'blancas':
                 com = REPLICANTE.get_best_move()
                 Partida.variacion.append(com)
                 REPLICANTE.set_position(com)
+                # Suma un movimiento (ej ... e7e5)
                 Partida.n_movimiento += 1
+                # Suma una jugada (ej 1. e2e4 e7e5)
                 Partida.n_jugada += 1
-
+        # Si la jugada no es correcta, lo desvia a la funcion "opciones"
         else:
             Partida.jugada_correcta = False
-            opciones(entrada)
+            Partida.opciones(entrada)
 
         reiniciar = Partida.salir
 
 
-    
 #######################################
-elif tipo == 'humano':
-    variacion = Partida()
+### Template para Humano - Humano
+elif Partida.tipo == 'apertura':
     reiniciar = False
     while not reiniciar:
-        variacion.humano()
+        # Ordena la informacion relevante sobre la partida
+        # y la formatea para imprimirla en la LCD 84x48
+        Partida.imprimirPartida()
+        # Espera y registra la jugada de humano
+        entrada = input().lower()
 
-        reiniciar = variacion.salir
+        Partida.LIBRO(entrada)
+        reiniciar = Partida.salir
         #os.system('python3 main.py')
 
+        
+### Template para Humano - Libro de aperturas
 elif tipo == 'apertura':
     variacion = Partida()
     reiniciar = False
@@ -113,5 +114,6 @@ elif tipo == 'apertura':
         reiniciar = variacion.salir
         #os.system('python3 main.py')
 
+### Etc
 
     

@@ -19,7 +19,7 @@ aperturas = {
 'giuoco-piano': ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1c4', 'f8c5'],
 'gambito-evans': ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1c4', 'f8c5', 'b2b4'],
 'defensa-dos-caballos': ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1c4', 'g8f6'],
-'ruy-lopez': ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1c5'],
+'ruy-lopez': ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'],
 
 'doble-peon-dama': ['d2d4', 'd7d5', 'c2c4'],
 'gambito-dama-rechazado': ['d2d4', 'd7d5', 'c2c4', 'e7e6'],
