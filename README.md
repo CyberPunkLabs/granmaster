@@ -46,8 +46,8 @@ pip3 install RPi-GPIO
 pip3 install spidev
 ```
 
-### Utiliza
-https://github.com/e-tinkers/LCD-5110-Raspberry-Library
+### Utiliza la librería Stockfish como interfaz para Python
+https://github.com/zhelyabuzhsky/stockfish
 
 
 ### Tutorial librerías
