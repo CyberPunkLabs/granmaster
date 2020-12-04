@@ -12,7 +12,7 @@ class Menu:
         self.keyEvent = keyEvent
         self.font = font
         self.options = options
-        self.selection = 0
+        self.selection = selection
         
         self.framebuffer = Framebuffer.Framebuffer()
 

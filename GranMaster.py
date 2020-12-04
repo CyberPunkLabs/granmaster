@@ -9,6 +9,22 @@ from datetime import datetime
 #from lcd5110 import LCD5110
 from models import Stockfish
 
+import Keys
+import Lcd
+import Framebuffer
+import Font
+import Menu
+import Log
+import Move
+
+
+lcd = Lcd.Lcd()
+keyEvent = Keys.KeyEvent()
+
+font = Font.Font('FONTS/BIGPILE/SEEMORE/CM-6X8.F08')
+
+log = Log.Log(font)
+
 
 ### Crea a Tyrell, como instancia de Stockfish, con:
 ### PV: 4; arrogancia: 0; habilidad: 20; profundidad de analisis = 20 
@@ -335,25 +351,18 @@ class Partida:
 
                 
     def crearPerfil(self):
-        while True:
-            self.imprimirGenerico('INICIO', '(1) Cargar perfil', '(2) Jugar partida', dwell=0.5)
-            opcion = input()
-            try:
-                opcion = int(opcion)
-            except ValueError:
-                self.imprimirGenerico('Opción incorrecta!', dwell=1)
-                continue
-            if (opcion >= 1) & (opcion <= 2):
-                if opcion == 1:
-                    self.leerPartida(tipo='juego')
-                if opcion == 2:
-                    self.perfil = "Intruso"
-                    self.configuracion()
-                #self.imprimirGenerico("Perfil:", "{}", "Color:", "{}.".format(self.perfil, self.color), dwell=0.5)
-                return
+        menuOptions = ['Jugar', 'Rendirse', 'Salir', 'Ayuda', '1', '2']
+        move = Move.Move(lcd, keyEvent, font)
+        menu = Menu.Menu(lcd, keyEvent, font, ['Cargar perfil', 'Jugar partida'], 0)
 
-            else:
-                self.imprimirGenerico('Opción incorrecta!', dwell=2)
+        selection = menu.run()
+        if selection == 0:
+            self.leerPartida(tipo='juego')
+        if selection == 1:
+            self.perfil = "Intruso"
+            self.configuracion()
+
+        return
 
 
 #################
