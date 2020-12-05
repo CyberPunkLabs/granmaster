@@ -9,6 +9,7 @@ from datetime import datetime
 #from lcd5110 import LCD5110
 from models import Stockfish
 
+
 import Keys
 import Lcd
 import Framebuffer
@@ -347,9 +348,8 @@ class Partida:
                     self.imprimirGenerico('Opción incorrecta!', dwell=1)
 
 
-
-
-                
+                    
+##################################################                
     def crearPerfil(self):
         menuOptions = ['Jugar', 'Rendirse', 'Salir', 'Ayuda', '1', '2']
         move = Move.Move(lcd, keyEvent, font)
