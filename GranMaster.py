@@ -19,13 +19,13 @@ from datetime import datetime
 from models import Stockfish
 
 
-sys.path.insert(1, "/home/diogenes/projects/granmaster/lcd/")
+#sys.path.insert(1, "/home/diogenes/projects/granmaster/lcd/")
 
 
 # [ERROR] Solucionado con xhost si:localuser:root
 lcd = Lcd.Lcd()
 keyEvent = Keys.KeyEvent()
-font = Font.Font('FONTS/BIGPILE/SEEMORE/CM-4X6.F06')
+font = Font.Font('FONTS/BIGPILE/SEEMORE/CM-6X6.F06')
 log = Log.Log(font)
 
 

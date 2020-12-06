@@ -22,7 +22,7 @@ from models import Stockfish
 from GranMaster import Partida
 import random
 
-sys.path.insert(1, "/home/diogenes/projects/granmaster/lcd/")
+#sys.path.insert(1, "/home/diogenes/projects/granmaster/lcd/")
 
 ### Crea  partida
 Partida = Partida()
