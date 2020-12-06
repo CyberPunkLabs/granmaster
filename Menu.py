@@ -7,7 +7,7 @@ import Keys
 
 
 class Menu:
-    def __init__(self, lcd, keyEvent, font, options, selection):
+    def __init__(self, lcd, keyEvent, font, options, selection, left = True):
         self.lcd = lcd
         self.keyEvent = keyEvent
         self.font = font
@@ -16,7 +16,10 @@ class Menu:
         
         self.framebuffer = Framebuffer.Framebuffer()
 
-        self.xDelta = int((font.xCharacter - max([len(x) + 1 for x in options])) / 2)
+        if left:
+            self.xDelta = 0 
+        else:
+            self.xDelta = int((font.xCharacter - max([len(x) + 1 for x in options])) / 2)
         self.yDelta = int((font.yCharacter - len(self.options)) / 2)
 
 

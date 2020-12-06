@@ -18,7 +18,7 @@ log = Log.Log(font)
 
 menuOptions = ['Jugar', 'Rendirse', 'Salir', 'Ayuda', '1', '2']
 move = Move.Move(lcd, keyEvent, font)
-menu = Menu.Menu(lcd, keyEvent, font, menuOptions, 1)
+menu = Menu.Menu(lcd, keyEvent, font, menuOptions, 2)
 
 
 selection = menu.run()
