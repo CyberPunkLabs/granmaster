@@ -15,8 +15,12 @@ class Lcd:
         if raspberryPi:
             print('TODO!')
         else:
+            # [ERROR] Solucionado con xhost si:localuser:root            
             self.fig, self.ax = pyplot.subplots(1, 1)
+            #
+            
             self.im = self.ax.imshow(numpy.zeros((48, 84), dtype = numpy.int8), aspect = 'equal', vmin = 0, vmax = 1)
+
 
 
     def update(self, framebuffer):

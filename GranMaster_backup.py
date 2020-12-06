@@ -25,7 +25,7 @@ sys.path.insert(1, "/home/diogenes/projects/granmaster/lcd/")
 # [ERROR] Solucionado con xhost si:localuser:root
 lcd = Lcd.Lcd()
 keyEvent = Keys.KeyEvent()
-font = Font.Font('FONTS/BIGPILE/SEEMORE/CM-4X6.F06')
+font = Font.Font('FONTS/BIGPILE/SEEMORE/CM-6X8.F08')
 log = Log.Log(font)
 
 
@@ -275,50 +275,46 @@ class Partida:
     ### Menu de configuracion
     def configuracion(self):
         ### Color del jugador
-        opciones = ["Tipo", "Blancas", "Negras", "Aleatorio", "Apertura", "Rep vs Rep"]
-        
-        move = Move.Move(lcd, keyEvent, font)
-        menu = Menu.Menu(lcd, keyEvent, font, opciones, 0)
-        seleccion = menu.run()
-
-        #self.imprimirGenerico('Color', '(1) Blancas', '(2) Negras', '(3) Aleatorio', '(4) Apertura', '(5) Rep vs Rep', dwell=1)
-        #opcion = input()
-
-        if opcion == 1:
-            Partida.tipo = 'blancas'
-            self.color = 'blancas'
-
-        elif opcion == 2:
-            Partida.tipo = 'blancas'
-            self.color = 'negras'
-
-        elif opcion == 3:
-            Partida.tipo = 'blancas'
-            self.color = random.choice(['blancas', 'negras'])
-
-            info = ["Color:", "{}.".format(self.color)]
-            menu = Menu.Menu(lcd, keyEvent, font, info, 0)
-            menu.run()
-
-        elif opcion == 4:
-            Partida.tipo = 'apertura'
-            aperturas = Partida.aperturas.keys()
-            print("Elige apertura:")
-            for apertura in aperturas:
-                print(apertura)
-            nombre_apertura = input()
-            if nombre_apertura not in aperturas:
-                self.imprimirGenerico("{} no existe".format(nombre_apertura))
-                self.crearPerfil()
+        while True:
+            self.imprimirGenerico('Color', '(1) Blancas', '(2) Negras', '(3) Aleatorio', '(4) Apertura', '(5) Rep vs Rep', dwell=1)
+            opcion = input()
+            try:
+                opcion = int(opcion)
+            except ValueError:
+                self.imprimirGenerico('Opción incorrecta!', dwell=1)
+                continue
+            if opcion == 1:
+                Partida.tipo = 'blancas'
+                self.color = 'blancas'
+                break
+            elif opcion == 2:
+                Partida.tipo = 'blancas'
+                self.color = 'negras'
+                break
+            elif opcion == 3:
+                Partida.tipo = 'blancas'
+                self.color = random.choice(['blancas', 'negras'])            
+                self.imprimirGenerico('Color', '{}.'.format(self.color), dwell=0.5)
+                break
+            elif opcion == 4:
+                Partida.tipo = 'apertura'
+                aperturas = Partida.aperturas.keys()
+                print("Elige apertura:")
+                for apertura in aperturas:
+                    print(apertura)
+                nombre_apertura = input()
+                if nombre_apertura not in aperturas:
+                    self.imprimirGenerico("{} no existe".format(nombre_apertura))
+                    self.crearPerfil()
+                else:
+                    Partida.nombre_apertura = nombre_apertura
+                    Partida.apertura = Partida.aperturas[nombre_apertura]
+                    print("Elegiste {}".format(nombre_apertura))
+                    print(Partida.apertura)
+                    time.sleep(3)
+                    break
             else:
-                Partida.nombre_apertura = nombre_apertura
-                Partida.apertura = Partida.aperturas[nombre_apertura]
-                print("Elegiste {}".format(nombre_apertura))
-                print(Partida.apertura)
-                time.sleep(3)
-
-        else:
-            self.imprimirGenerico('Opción no implementada...', dwell=2)
+                self.imprimirGenerico('Opción no implementada...', dwell=2)
 
 
         if not Partida.tipo == 'apertura':
@@ -422,7 +418,7 @@ class Partida:
         self.imprimirGenerico("Nombre del perfil:")
         perfiles = glob.glob('perfiles/*.gm')
         if len(perfiles) == 0:
-            info = ["No perfil", "Guarda juego nuevo"]
+            info = ["No hay perfiles", " ", "Guarda un juego nuevo", "para crear tu primer perfil."]
 
             menu = Menu.Menu(lcd, keyEvent, font, info, 0)
             menu.run()
@@ -595,17 +591,3 @@ class Partida:
         # Con LCD, hace titilar la pantalla
         #self.titilar()
         Partida.jugada_correcta = False
-
-
-
-    def imprimirLCD(info, responsivo):
-        info = ["Tipo", "Blancas", "Negras", "Aleatorio", "Apertura", "Rep vs Rep"]
-        
-        menu = Menu.Menu(lcd, keyEvent, font, opciones, 0)
-
-        if responsivo:
-            move = Move.Move(lcd, keyEvent, font)
-            seleccion = menu.run()
-
-        else:
-            menu.run()
