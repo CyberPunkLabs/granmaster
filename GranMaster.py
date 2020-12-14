@@ -26,14 +26,17 @@ lcd = Lcd.Lcd()
 keyEvent = Keys.KeyEvent()
 font = Font.Font('FONTS/BIGPILE/SEEMORE/CM-6X6.F06')
 log = Log.Log(font)
+out_device = 'terminal'
 
 
 ### Crea a Tyrell, como instancia de Stockfish, con:
 ### PV: 4; arrogancia: 0; habilidad: 20; profundidad de analisis = 20 
 if os.name == 'nt':
-    TYRELL = Stockfish("./engine/stockfish_20011801_x64.exe", parameters={"MultiPV": 4, "Contempt": 0})
+    engine_path = "./engine/stockfish_20011801_x64.exe"
 else: ### definir directorio propio !!
-    TYRELL = Stockfish("/usr/games/stockfish", parameters={"MultiPV": 4, "Contempt": 0})
+    engine_path = "/usr/games/stockfish"
+
+TYRELL = Stockfish(engine_path, parameters={"MultiPV": 4, "Contempt": 0})
 TYRELL.set_depth(20)
 TYRELL.set_skill_level(20)
 
@@ -76,7 +79,7 @@ class Partida:
         ### Despliega pantallas de configuracion
         #self.crearPerfil()
         #self.arrogancia = 0
-        self.color = 'blancas'
+        self.color = "blancas"
         self.perfil = "prueba"
 
         if self.color == 'blancas':
@@ -98,46 +101,234 @@ class Partida:
                       resultado       = '*/*')
 
 
-##################               FUNCIONES              #####################
+        
+################## INICIO MENUES CONFIGURACION #####################
 
-    ### Define libro de apertura
-    def LIBRO(self, entrada):
-        print(Partida.n_movimiento)
-        print(Partida.apertura[Partida.n_movimiento])
-        if (len(entrada) > 1) & (TYRELL.is_move_correct(entrada)):
-            if entrada != Partida.apertura[Partida.n_movimiento]:
-                print("{}".format(entrada), "no es parte de la apertura")
+    ### Crear de inicio ###                
+    def menuInicio(self):
+        lineas = ["(1) Nuevo", "(2) Cargar"]
+        opcion = self.imprimirGenerico(lineas)
+        print("Seleccion (inicio): {} (tipo: {})".format(opcion, type(opcion)))
+
+        try:
+            opcion = int(opcion) # casting to int will likely raise an error
+            #print("Opcion (inicio): {} (tipo: {})".format(opcion, type(opcion)))
+            if opcion in [1, 2]:
+                if opcion == 1:
+                    self.perfil = "Intruso"
+                    self.menuConfiguracion()
+                if opcion == 2:
+                    #self.leerPartida(tipo='juego')
+                    self.menuInicio()
             else:
-                Partida.n_movimiento += 1
-                Partida.variacion.append(entrada)
+                lineas = ['Opción', 'incorrecta!']
+                self.imprimirGenerico(lineas, seleccion=False)
+                self.menuInicio()
 
-                if len(Partida.variacion) == len(Partida.apertura):
-                    print("Apertura terminada")
-                    self.crearPerfil()
+        except ValueError:
+            lineas = ['Value error!']
+            self.imprimirGenerico(lineas, seleccion=False)
+            self.menuInicio()
             
-                self.imprimirGenerico("Jugando", "{}".format(Partida.nombre_apertura.title()))
 
-                ### Toma jugada desde libro de aperturas
-                jugada = Partida.apertura[Partida.n_movimiento]
+    ### Menu de configuracion
+    def menuConfiguracion(self):
+        ### Color del jugador
+        lineas = ["Tipo:", "(1) Blancas", "(2) Negras", "(3) Aleatorio", "(4) Apertura", "(5) Rep vs Rep"]
+        opcion = self.imprimirGenerico(lineas, seleccion=True)
+        #print("Seleccion (juego): {} (opcion: {})".format(lineas(opcion), opcion))
+        #opcion = input()
+        try:
+            opcion = int(opcion)
+            
+            if opcion in [1, 2, 3]:
+                if opcion == 1:
+                    Partida.tipo = 'blancas'
+                    self.color = 'blancas'
+                elif opcion == 2:
+                    Partida.tipo = 'blancas'
+                    self.color = 'negras'
+                elif opcion == 3:
+                    Partida.tipo = 'blancas'
+                    self.color = random.choice(['blancas', 'negras'])
 
-	        ### Agrega la jugada al arbol de la partida
-                Partida.variacion.append(jugada)
-                if len(Partida.variacion) == len(Partida.apertura):
-                    print("Apertura terminada")
-                    self.crearPerfil()
+                lineas = ["Color: ", "{}.".format(self.color)]
+                self.imprimirGenerico(lineas, seleccion=False)
+                self.menuHabilidad()
+                self.menuProfundidad()
+            else:
+                self.imprimirGenerico(["Opción no implementada..."], seleccion=False)
+                self.menuConfiguracion()
 
-                Partida.n_movimiento += 1
-                Partida.n_jugada += 1
-                #self.evaluarPosicion()
-                #self.imprimirNegras()
+        except ValueError:
+            lineas = ['Value error!']
+            self.imprimirGenerico(lineas, seleccion=False)
+            self.menuConfiguracion()
 
-        ### Si la jugada no es correcta, simplementa pasa
+
+    ### Inteligencia UCI: Habilidad replicante. Stockfish.set_skill_level [0, 20]
+    def menuHabilidad(self):
+        lineas = ["Habilidad Replicante:", "(1-20)"]
+        opcion = self.imprimirGenerico(lineas)
+
+        try:
+            self.habilidad = int(opcion)
+            if (self.habilidad >= 1) & (self.habilidad <= 20):
+                lineas = ['Replicante', 'Habilidad: {}.'.format(self.habilidad)]
+                self.imprimirGenerico(lineas, seleccion=False)
+            else:
+                lineas = ['Opcion', 'incorrecta!']
+                self.imprimirGenerico(lineas, seleccion=False)
+                self.menuHabilidad()
+
+        except ValueError:
+            lineas = ['Value error!']
+            self.imprimirGenerico(lineas, seleccion=False)
+            self.menuHabilidad()
+
+
+    ### Profundidad de analisis (numero de iteraciones efectuadas por Replicante)
+    def menuProfundidad(self):
+        lineas = ["Profundidad análisis", "(1-40)"]
+        opcion = self.imprimirGenerico(lineas)
+
+        try:
+            self.profundidad_analisis = int(opcion)
+
+            if (self.profundidad_analisis >= 1) & (self.profundidad_analisis <= 40):
+                lineas = ['Replicante', 'Profundidad: {}.'.format(self.profundidad_analisis)]
+                self.imprimirGenerico(lineas, seleccion=False)        
+            else:
+                self.imprimirGenerico(['Opción incorrecta!'], seleccion=False)
+                self.menuProfundidad()
+                    
+        except ValueError:
+            lineas = ['Value error!']
+            self.imprimirGenerico(lineas, seleccion=False)
+            self.menuProfundidad()
+
+
+
+
+################## INICIO MENUES DE PARTIDA #####################
+    ### Maneja las opciones del juego
+    def opciones(self):
+        lineas = ["Análisis", "Deshacer", "Posición blancas", "Posición negras"]
+        entrada = self.imprimirGenerico(lineas, [0,1,2,3,4,5])
+
+        print("Entrada: {}".format(entrada))
+
+        
+        # # Imprime el analisis de Tyrell (Stockfish depth:15, skill:20, PV:4)
+        # if entrada == "a":
+        #     self.imprimirAnalisis()
+        # elif entrada == "t":
+        #     TYRELL.set_position(Partida.variacion)
+        #     print(TYRELL.get_board_visual())
+        # # Deshace la jugada
+        # elif entrada == "d":
+        #     self.deshacer()
+        # # Escribe la partida en un perfil de usuario
+        # #elif entrada == "e":
+        # #    self.escribirPartida(tipo='juego')
+        # # Imprime el tablero en letras (desarrolladores)
+        # elif entrada == "p":
+        #     TYRELL.set_position(Partida.variacion)
+        #     print(TYRELL.get_board_visual())
+        # # Imprime posicion FEN
+        # #elif entrada == "f":
+        # #    print("[CPLs] Posición FEN:")
+        # #    print(TYRELL.get_fen_position())
+        # # Imprime la posicion de las blancas o negras
+        # elif entrada in ["b", "n"]:
+        #     self.posicionTablero(color=entrada)
+        # # Lee la partida un un perfil guardado
+        # #elif entrada == "l":
+        # #    self.leerPartida(tipo='juego')
+
+        # # Ante una opcion incorrecta:
+        # #else:
+
+        # # Con LCD, hace titilar la pantalla
+        # #self.titilar()
+        Partida.jugada_correcta = False
+
+
+        
+    ### Imprimir pantalla principal, con la informacion central de la partida
+    def imprimirPartida(self):
+        evaluacion = self.evaluarPartida()
+        self.formatearPartida()
+
+        # Formatea las líneas
+        if self.color == 'blancas':
+            if Partida.n_jugada == 1:
+                linea2 = "1. {} {}".format(Partida.ultimas[0], Partida.ultimas[1])
+                linea3 = "2. {} {}".format(Partida.ultimas[2], Partida.ultimas[3])
+            elif Partida.n_jugada == 2:
+                linea2 = "1. {} {}".format(Partida.ultimas[0], Partida.ultimas[1])
+                linea3 = "2. {} {}".format(Partida.ultimas[2], Partida.ultimas[3])
+            else:
+                linea2 = "{}. {} {}".format(Partida.n_jugada - 2, Partida.ultimas[0], Partida.ultimas[1])
+                linea3 = "{}. {} {} {}.*".format(Partida.n_jugada - 1, Partida.ultimas[2], Partida.ultimas[3], Partida.n_jugada - 0)
+
         else:
-            self.opciones(entrada)
+            if Partida.n_jugada == 1:
+                linea2 = "1. {} {}".format(Partida.ultimas[0], Partida.ultimas[1])
+                linea3 = "2. {} {}".format(Partida.ultimas[2], Partida.ultimas[3])
+            else:
+                linea2 = "{}. {} {}".format(Partida.n_jugada - 1, Partida.ultimas[0], Partida.ultimas[1])
+                linea3 = "{}. {} {}".format(Partida.n_jugada - 0, Partida.ultimas[2], Partida.ultimas[3])
 
+        linea1 = "Análisis: {}".format(Partida.evaluacion)
+        linea4 = " "
+
+        
+        if Partida.tipo == 'apertura':
+            if self.color == 'blancas':
+                linea5 = "{} - {}".format(self.perfil, Partida.nombre_apertura.title())
+            else:
+                linea5 = "{} - {}".format(Partida.nombre_apertura.title(), self.perfil)
+
+            linea5 = "Ingresa jugada..."
+            linea6 = "Opciones"
+            lineas = [linea1, linea2, linea3, linea4, linea5, linea6]
+            self.imprimirGenerico(lineas, seleccion=True)
+
+        else:
+            if self.color == 'blancas':
+                linea5 = "{} - Replicante{}.{}".format(self.perfil, self.habilidad, self.profundidad_analisis)
+            else:
+                linea5 = "Replicante{}.{} - {}".format(self.habilidad, self.profundidad_analisis, self.perfil)
+
+            linea5 = "Ingresa jugada..."
+            linea6 = "Opciones"
+            lineas = [linea1, linea2, linea3, linea4, linea5, linea6]
+            opcion = self.imprimirGenerico(lineas, [4, 5], seleccion=False)
+
+            if opcion == 5:
+                self.opciones()
+                
 
             
-#################### FUNCIONES DE PANTALLA #########################
+
+################# EVALUACIONES Y ANALISIS ###################
+    def evaluarPartida(self):
+        ### Tyrell evalua la posicion en centipeones
+        TYRELL.set_position(Partida.variacion)
+        evaluacion = TYRELL.get_evaluation()
+        evaluacion = evaluacion['value'] / 100
+        if self.color == 'negras':
+            evaluacion = evaluacion * -1
+
+        # Estandariza el string de salida a +/-x.xx
+        if evaluacion >= 0:
+            Partida.evaluacion = "+{:.2f}".format(evaluacion)
+        else:
+            Partida.evaluacion = "{:.2f}".format(evaluacion)
+
+        return evaluacion
+    
 
     ### Imprimir analisis
     def imprimirAnalisis(self):
@@ -165,25 +356,18 @@ class Partida:
                         evaluacion.append("{}".format(temp))
                 if linea[palabra] == "pv":
                     variacion.append(linea[palabra+1:])
-
                     
-        self.imprimirGenerico("[Análisis]",
-                              "{} {}".format(evaluacion[0], variacion[0]),
-                              "{} {}".format(evaluacion[1], variacion[1]),
-                              "{} {}".format(evaluacion[2], variacion[2]),
-                              "{} {}".format(evaluacion[3], variacion[3]))
-        print("\n")
-
         lineas = ["[Análisis]", "{} {}".format(evaluacion[0], variacion[0]), "{} {}".format(evaluacion[1], variacion[1]),
                   "{} {}".format(evaluacion[2], variacion[2]), "{} {}".format(evaluacion[3], variacion[3])]
+                    
+        self.imprimirGenerico(lineas)
 
-        self.imprimirLCD(opciones=lineas)
 
 
+########## OPERACIONES SOBRE PARTIDA ####################        
     ### Deshacer jugada
     def deshacer(self):
         #Partida.jugada_correcta = False
-
         ### Si la partida tiene mas de 1 movimiento:
         if len(Partida.variacion) > 2:
             # Borra los ultimos dos
@@ -194,79 +378,40 @@ class Partida:
 
         # Si no hay jugadas suficientes para deshacer
         else:
+            lineas = ["No hay más jugadas", "que deshacer!"]
             self.imprimirGenerico("No hay más jugadas", "que deshacer!")
-
-            self.imprimirLCD(opciones=["No hay más jugadas", "que deshacer!"])
-            
             
         # Reimprime la partida
         self.imprimirPartida()
 
+        
 
-    ### Imprimir pantalla principal, con la informacion central de la partida
-    def imprimirPartida(self):
-        ### Tyrell evalua la posicion en centipeones
-        evaluacion = TYRELL.get_evaluation()
-        evaluacion = evaluacion['value'] / 100
-        if self.color == 'negras':
-            evaluacion = evaluacion * -1
-        # Estandariza el string de salida a +/-x.xx
-        if evaluacion >= 0:
-            Partida.evaluacion = "+{:.2f}".format(evaluacion)
-        else:
-            Partida.evaluacion = "{:.2f}".format(evaluacion)
+##################### FUNCIONES DE IMPRESION ######################
 
-        self.formatearPartida()
+    def imprimirLCD(self, lineas, opciones):
+        print("Entrando a LCD")
+        #move = Move.Move(lcd, keyEvent, font)
+        menu = Menu.Menu(lcd, keyEvent, font, lineas, opciones, 0)
+        opcion = menu.run()
 
-        if self.color == 'blancas':
-            if Partida.n_jugada == 1:
-                line2 = " 1. {} {}".format(Partida.ultimas[0], Partida.ultimas[1])
-                line3 = " 2. {} {}".format(Partida.ultimas[2], Partida.ultimas[3])
-                #Partida.evaluacion = " "
-            elif Partida.n_jugada == 2:
-                line2 = " 1. {} {}".format(Partida.ultimas[0], Partida.ultimas[1])
-                line3 = " 2. {} {}".format(Partida.ultimas[2], Partida.ultimas[3])
-            else:
-                line2 = " {}. {} {}".format(Partida.n_jugada - 2, Partida.ultimas[0], Partida.ultimas[1])
-                line3 = " {}. {} {} {}.*".format(Partida.n_jugada - 1, Partida.ultimas[2], Partida.ultimas[3], Partida.n_jugada - 0)
+        return opcion
 
-        else:
-            if Partida.n_jugada == 1:
-                line2 = " 1. {} {}".format(Partida.ultimas[0], Partida.ultimas[1])
-                line3 = " 2. {} {}".format(Partida.ultimas[2], Partida.ultimas[3])
-                #Partida.evaluacion = " "
-            else:
-                line2 = " {}. {} {}".format(Partida.n_jugada - 1, Partida.ultimas[0], Partida.ultimas[1])
-                line3 = " {}. {} {}".format(Partida.n_jugada - 0, Partida.ultimas[2], Partida.ultimas[3])
 
-        line1 = " Analisis: {}".format(Partida.evaluacion)
-        line4 = " "
-        if Partida.tipo == 'apertura':
-            if self.color == 'blancas':
-                line5 = "{} - {}".format(self.perfil, Partida.nombre_apertura.title())
-            else:
-                line5 = "{} - {}".format(Partida.nombre_apertura.title(), self.perfil)
-            line6 = "Ingresa jugada..."
+    ### Imprimir generico
+    def imprimirGenerico(self, lineas, opciones, seleccion=True, terminal=True, lcd=True):
 
-            string = [line1, line2, line3, line4, line5, line6]
-            self.imprimirGenerico(line1, line2, line3, line4, line5, line6, seleccion=False)
-            self.imprimirLCD(string)
+        if terminal:
+            print("\n### PANTALLA DEL USUARIO ")
+            print(*lineas, sep="\n")
 
+        if lcd:
+            print("Salida: LCD")
+            opcion = self.imprimirLCD(lineas, opciones)
+            print("Opción: {}\nSaliendo de LCD...".format(opcion))
+
+            return opcion
+                
             
-        else:
-            if self.color == 'blancas':
-                line5 = "{} - Replicante{}.{}".format(self.perfil, self.habilidad, self.profundidad_analisis)
-            else:
-                line5 = "Replicante{}.{} - {}".format(self.habilidad, self.profundidad_analisis, self.perfil)
-            line6 = "Ingresa jugada..."
-
-            string = [line1, line2, line3, line4, line5, line6]
-            self.imprimirGenerico(line1, line2, line3, line4, line5, line6, seleccion=False)
-            self.imprimirLCD(string)
-
-
-
-
     ### Formatear Partida
     def formatearPartida(self):
         if self.color == 'blancas':
@@ -281,242 +426,11 @@ class Partida:
             else:
                 Partida.ultimas = Partida.variacion[-3:] + ["*"]
 
-                
-    #############################
-    ### Menu de configuracion
-    def configuracion(self):
-        ### Color del jugador
-        opciones = ["Tipo", "Blancas", "Negras", "Aleatorio", "Apertura", "Rep vs Rep"]
-        
-        move = Move.Move(lcd, keyEvent, font)
-        menu = Menu.Menu(lcd, keyEvent, font, opciones, 0)
-        opcion = menu.run()
-        print("Tipo: {} (type: {})".format(opcion, type(opcion)))
-
-        self.imprimirGenerico('Color', '(1) Blancas', '(2) Negras', '(3) Aleatorio', '(4) Apertura', '(5) Rep vs Rep')
-        #opcion = input()
-
-        if opcion == 1:
-            Partida.tipo = 'blancas'
-            self.color = 'blancas'
-
-        elif opcion == 2:
-            Partida.tipo = 'blancas'
-            self.color = 'negras'
-
-        elif opcion == 3:
-            Partida.tipo = 'blancas'
-            self.color = random.choice(['blancas', 'negras'])
-
-            info = ["Color:", "{}.".format(self.color)]
-            menu = Menu.Menu(lcd, keyEvent, font, info, 0)
-            menu.run()
-
-        elif opcion == 4:
-            Partida.tipo = 'apertura'
-            aperturas = Partida.aperturas.keys()
-            print("Elige apertura:")
-            for apertura in aperturas:
-                print(apertura)
-            nombre_apertura = input()
-            if nombre_apertura not in aperturas:
-                self.imprimirGenerico("{} no existe".format(nombre_apertura))
-                self.crearPerfil()
-            else:
-                Partida.nombre_apertura = nombre_apertura
-                Partida.apertura = Partida.aperturas[nombre_apertura]
-                print("Elegiste {}".format(nombre_apertura))
-                print(Partida.apertura)
-                time.sleep(3)
-
-        else:
-            self.imprimirGenerico('Opción no implementada...')
-            #self.imprimirLCD('Opción no implementada...', responsivo=True)
-
-
-        if not Partida.tipo == 'apertura':
-
-            ### Inteligencia UCI: Habilidad replicante. Stockfish.set_skill_level [0, 20]
-            while True:
-                self.imprimirGenerico('Habilidad Replicante', '(1-20)')
-
-                string = ['Habilidad', 'Replicante:', '1', '2', '3', '4']
-                opcion = self.imprimirLCD(string)
-                
-                self.habilidad = int(opcion)
-                if (self.habilidad >= 1) & (self.habilidad <= 20):
-                    self.imprimirGenerico('Replicante', 'Habilidad: {}.'.format(self.habilidad))
-
-                    string = ['Habilidad', 'Replicante: {}'.format(self.habilidad)]
-                    opcion = self.imprimirLCD(string)
-                    break
-                
-                else:
-                    self.imprimirGenerico('Opción incorrecta!')
-                    string = ['Opcion', 'incorrectas!']
-                    opcion = self.imprimirLCD(string)
-
-                    # self.imprimirLCD(["Opción incorrecta!"], responsivo=True) 
-
-
-            ### Profundidad de analisis (numero de iteraciones efectuadas por Replicante)
-            while True:
-                self.imprimirGenerico('Profundidad análisis','(1-40)')
-
-                string = ["Profundidad análisis", "(1-40)"]
-                opcion = self.imprimirLCD(string)
-
-                self.profundidad_analisis = opcion
-                if (self.profundidad_analisis >= 1) & (self.profundidad_analisis <= 40):
-                    self.imprimirGenerico('Replicante', 'Profundidad: {}.'.format(self.profundidad_analisis))
-                    
-                    string = ["Replicante", "Profundidad".format(self.profundidad_analisis)]
-                    opcion = self.imprimirLCD(string)
-
-                    #self.imprimirGenerico('Replicante', 'Arrogancia: {}.'.format(self.arrogancia), dwell=1)
-                    break
-                else:
-                    self.imprimirGenerico('Opción incorrecta!')
-
-                    string = ["Opcion", "incorrecta!"]
-                    opcion = self.imprimirLCD(string)
-                    
-
-                    
-##################################################                
-    def crearPerfil(self):
-        opciones = ['Cargar perfil', 'Jugar partida']
-        move = Move.Move(lcd, keyEvent, font)
-        menu = Menu.Menu(lcd, keyEvent, font, opciones, 0)
-
-        seleccion = menu.run()
-        print("Seleccion: {}".format(seleccion))
-        if seleccion == 0:
-            self.leerPartida(tipo='juego')
-        if seleccion == 1:
-            self.perfil = "Intruso"
-            self.configuracion()
-
-
-
-#################
-    ### Guardar juego
-    def escribirPartida(self, tipo):
-        # Crea diccionario con header y arbol (implementar PGN)
-        partida = dict(header=self.header, variacion=Partida.variacion, n_jugada=Partida.n_jugada,
-                           n_movimiento=Partida.n_movimiento, evaluacion=Partida.evaluacion,
-                           jugada_correcta=Partida.jugada_correcta, color=self.color, habilidad=self.habilidad,
-                           profundidad_analisis=self.profundidad_analisis, arrogancia=self.arrogancia, pgn = [])
-
-        # Nombre del perfil donde guardar la partida
-        self.imprimirGenerico("Escribe nombre perfil:", "a: (A)trás")
-        perfiles = glob.glob('perfiles/*.gm')
-
-        # Imprime lista de perfiles
-        nombres_perfiles = [i.split('/')[-1][:-3] for i in perfiles]
-        for linea in nombres_perfiles:
-            print("-> {}".format(linea))
-
-        # Espera string especificando nombre del perfil
-        opcion = input()
-        if opcion != "a":
-            if self.color == 'blancas':
-                nombre_partida = "{}-Replicante{}.{} {}".format(opcion, partida['profundidad_analisis'], partida['habilidad'], partida['header']['fecha'])
-            else:
-                nombre_partida = "Replicante{}.{}-{} {}".format(partida['profundidad_analisis'], partida['habilidad'], opcion, partida['header']['fecha'])
-
-            try:
-                diccionario = pickle.load(open('perfiles/{}.gm'.format(opcion), 'rb'))
-            except FileNotFoundError:
-                 print("[CPLs] Creando nuevo perfil {}".format(opcion))
-                 diccionario = dict()
-                 #self.imprimirGenerico("{}.gm".format(opcion), "no existe...", dwell=1)
-
-            print("Diccionario cargado {}:\n{}".format(opcion, diccionario.keys()))
-            diccionario[nombre_partida] = partida
-            pickle.dump(diccionario, open('perfiles/{}.gm'.format(opcion), 'wb'))
-            print("Diccionario creado {}:\n{}".format(opcion, diccionario.keys()))
-
-            self.imprimirGenerico("Guardado en", "{} !!".format(opcion))
-            time.sleep(2)
-
 
             
-   #Prueba
-   ### Leer partida
-    def leerPartida(self, tipo):
-        ### Carga perfil
-        self.imprimirGenerico("Nombre del perfil:")
-        perfiles = glob.glob('perfiles/*.gm')
-        if len(perfiles) == 0:
-            info = ["No perfil", "Guarda juego nuevo"]
-
-            menu = Menu.Menu(lcd, keyEvent, font, info, 0)
-            menu.run()
-            self.crearPerfil()
-
-        # Imprime lista de perfiles
-        nombres_perfiles = [i.split('/')[-1][:-3] for i in perfiles]
-        for linea in nombres_perfiles:
-            print("-> {}".format(linea))
-
-        # Espera por input de usuario
-        nombre_perfil = input()
-
-        if nombre_perfil not in nombres_perfiles:
-            self.imprimirGenerico("{} no existe".format(nombre_perfil))
-            self.crearPerfil()
-        else:
-            # Intenta carga de archivo
-            try:
-                perfil = pickle.load(open('perfiles/{}.gm'.format(nombre_perfil), 'rb'))
-            except FileNotFoundError:
-                self.imprimirGenerico("El perfil {}".format(opcion), "No existe!")
-                self.crearPerfil()
-
-            ### Imprime partidas en perfil
-            partidas = list(perfil.keys())
-            print("[CPLs] Partidas en perfil:")
-            iterador = 1
-            for line in partidas:
-                print("({}) {}".format(iterador, line))
-                iterador += 1
-
-            self.imprimirGenerico("Selecciona partida:", "(INGRESA SOLO NUMEROS!)")
-            try:
-                opcion = int(input())
-            except ValueError:
-                self.imprimirGenerico("Opción {}".format(opcion), "incorrecta !!")
-                self.crearPerfil()
-                #return
-
-            print("Selección: {}".format(opcion))
-            print("Numero partidas: {}".format(len(partidas)))
-            if (opcion > 0) & (opcion < (len(partidas) + 1)):
-                partida = partidas[opcion - 1]
-                diccionario = perfil[partida]
-
-                Partida.header          = diccionario['header']
-                Partida.variacion       = diccionario['variacion']
-                Partida.n_jugada        = diccionario['n_jugada']
-                Partida.n_movimiento    = diccionario['n_movimiento']
-                Partida.evaluacion      = diccionario['evaluacion']
-                Partida.jugada_correcta = diccionario['jugada_correcta']
-                self.color                  = diccionario['color']
-                self.habilidad              = diccionario['habilidad']
-                self.profundidad_analisis   = diccionario['profundidad_analisis']
-                self.arrogancia             = diccionario['arrogancia']
-                self.perfil                 = nombre_perfil
-                self.imprimirGenerico("Perfil {}".format(self.perfil), "Partida {}".format(partida), "Cargados exitosamente!")
-            else:
-                self.imprimirGenerico("La opción {}".format(opcion), "Es incorrecta.")
-                self.crearPerfil()
-
-            TYRELL.set_position(Partida.variacion)
-            #print(stockfish.get_board_visual())
-            #time.sleep(2)
-
-
+            
+########################################################
+### OPCIONES SOLO PARA TERMINAL ###
     def imprimirTablero(self):
         TYRELL.set_position(Partida.variacion)
         fen = TYRELL.get_fen_position()
@@ -535,16 +449,14 @@ class Partida:
 
 
     def posicionTablero(self, color='b'):
-        coordenadas = [
-'a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8', 'h8',
-'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7',
-'a6', 'b6', 'c6', 'd6', 'e6', 'f6', 'g6', 'h6',
-'a5', 'b5', 'c5', 'd5', 'e5', 'f5', 'g5', 'h5',
-'a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4',
-'a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'h3',
-'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2',
-'a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1'
-]
+        coordenadas = ['a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8', 'h8',
+                       'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7',
+                       'a6', 'b6', 'c6', 'd6', 'e6', 'f6', 'g6', 'h6',
+                       'a5', 'b5', 'c5', 'd5', 'e5', 'f5', 'g5', 'h5',
+                       'a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4',
+                       'a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'h3',
+                       'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2',
+                       'a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1']
 
         unicode = Partida.diccionario_unicode
 
@@ -575,76 +487,5 @@ class Partida:
 
             print("{} {}".format(unicode[pieza], posicion))
 
-
-
-    ### Maneja las opciones del juego
-    def opciones(self, entrada):
-        # Imprime el analisis de Tyrell (Stockfish depth:15, skill:20, PV:4)
-        if entrada == "a":
-            self.imprimirAnalisis()
-        # Imprime el tablero en lindas figuras Unicode
-        elif entrada == "t":
-            print("[CPLs] Tablero:")
-            self.imprimirTablero()
-            print("\n")
-        # Deshace la jugada
-        elif entrada == "d":
-            self.deshacer()
-        # Escribe la partida en un perfil de usuario
-        elif entrada == "e":
-            self.escribirPartida(tipo='juego')
-        # Imprime el tablero en letras (desarrolladores)
-        elif entrada == "p":
-            TYRELL.set_position(Partida.variacion)
-            print(TYRELL.get_board_visual())
-        # Imprime posicion FEN
-        elif entrada == "f":
-            print("[CPLs] Posición FEN:")
-            print(TYRELL.get_fen_position())
-        # Imprime la posicion de las blancas o negras
-        elif entrada in ["b", "n"]:
-            self.posicionTablero(color=entrada)
-        # Lee la partida un un perfil guardado
-        elif entrada == "l":
-            self.leerPartida(tipo='juego')
-
-        # Ante una opcion incorrecta:
-        else:
-            print('''
-                 -> (a)nalisis
-                 -> (t)ablero
-                 -> Posicion (f)EN
-                 -> (d)eshacer
-                 -> (e)scribir partida
-                 -> (l)eer partida
-                 -> posicion (b)lancas y (n)egras''')
-
-        # Con LCD, hace titilar la pantalla
-        #self.titilar()
-        Partida.jugada_correcta = False
-
-
-
-    def imprimirLCD(self, string):
-        print("Dentro de test")
-        move = Move.Move(lcd, keyEvent, font)
-        menu = Menu.Menu(lcd, keyEvent, font, string, 0)
-        opcion = menu.run()
-
-        print("Saliendo de test")
-
-        return opcion
-
-
-    ### Imprimir generico
-    def imprimirGenerico(self, linea1=" ", linea2=" ", linea3=" ", linea4=" ", linea5=" ", linea6=" ", seleccion=False, out='lcd'):
-
-        if out == 'lcd':
-            lineas = [linea1, linea2, linea3, linea4, linea5, linea6]
-            self.imprimirLCD(lineas)
-
-        else:
-            print("\n########### PANTALLA DEL USUARIO " + "############")
-            print("{}\n{}\n{}\n{}\n{}\n{}\n".format(line1, line2, line3, line4, line5, line6))
 
 

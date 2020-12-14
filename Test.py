@@ -25,19 +25,21 @@ log = Log.Log(font)
 
 
 menuOptions = ['Jugar', 'Rendirse', 'Salir', 'Ayuda', '1', '2']
-move = Move.Move(lcd, keyEvent, font)
+#move = Move.Move(lcd, keyEvent, font)
 menu = Menu.Menu(lcd, keyEvent, font, menuOptions, 2)
 
 
-# selection = menu.run()
-# log.append('Opcion: {:s}'.format(menuOptions[selection]))
+selection = menu.run()
+print(selection)
+
+#log.append('Opcion: {:s}'.format(menuOptions[selection]))
+#lcd.update(log.render())
+#pyplot.pause(2)
+
+# selection = move.run()
+# log.append('Jugada: {:s}'.format(selection))
 # lcd.update(log.render())
 # pyplot.pause(2)
-
-selection = move.run()
-log.append('Jugada: {:s}'.format(selection))
-lcd.update(log.render())
-pyplot.pause(2)
 
 # for i in range(10):
 #     log.append('Line {:d}'.format(i))

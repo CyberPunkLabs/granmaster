@@ -48,8 +48,8 @@ def Replicante(habilidad, profundidad, verbose=False):
             
 
 def JugadaHumano(Partida, REPLICANTE):
-    Partida.imprimirPartida()
-    entrada = input().lower()
+    entrada = Partida.imprimirPartida()
+    #entrada = input().lower()
     #print("Jugada humano: {}".format(entrada))
 
     print("\nJugada humano")
@@ -85,7 +85,7 @@ def JugadaReplicante(entrada, Partida, REPLICANTE):
         # Suma un movimiento (ej ... e7e5)
         Partida.n_movimiento += 1
 
-    elif entrada == 'o'
+    elif entrada == 'o':
         Partida.opciones(entrada)
         
     else:

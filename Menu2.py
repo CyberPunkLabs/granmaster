@@ -20,8 +20,8 @@ class Menu:
         if left:
             self.xDelta = 0 
         else:
-            self.xDelta = int((font.xCharacter - max([len(x) + 1 for x in lines])) / 2)
-        self.yDelta = int((font.yCharacter - len(self.lines)) / 2)
+            self.xDelta = int((font.xCharacter - max([len(x) + 1 for x in options])) / 2)
+        self.yDelta = int((font.yCharacter - len(self.options)) / 2)
 
 
     def run(self):
@@ -31,10 +31,11 @@ class Menu:
             for i in range(len(self.lines)):
                 row = self.lines[i]
 
-                if self.selection == i:
-                    row = '>' + row
-                else:
-                    row = ' ' + row
+                if i > 3: 
+                    if self.selection == i:
+                        row = '>' + row
+                    else:
+                        row = ' ' + row
 
                 self.framebuffer.write(self.xDelta, i + self.yDelta, self.font, row)
 
@@ -53,5 +54,5 @@ class Menu:
 
             self.selection %= len(self.lines)
 
-            if (pressed == 'enter') & (self.selection in self.options):
+            if pressed == 'enter':
                 return self.selection
