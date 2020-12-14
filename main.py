@@ -21,13 +21,30 @@ import sys
 from models import Stockfish
 from GranMaster import Partida
 import random
+from matplotlib import pyplot
 
-#sys.path.insert(1, "/home/diogenes/projects/granmaster/lcd/")
+import Keys
+import Lcd
+import Framebuffer
+import Font
+import Menu
+import Log
+import Move
+
+lcd = Lcd.Lcd()
+keyEvent = Keys.KeyEvent()
+font = Font.Font('FONTS/BIGPILE/SEEMORE/CM-6X6.F06')
+log = Log.Log(font)
+
+move = Move.Move(lcd, keyEvent, font)
+
+sys.path.insert(1, "/home/diogenes/projects/granmaster/")
 
 ### Crea  partida
 Partida = Partida()
 # Imprime pantalla para crear perfiles o cargar una nueva partida
-Partida.crearPerfil()
+Partida.menuInicio()
+
 
 # Define la arrogancia del Replicante. -100 implica un juego mas
 # bien timido y defensivo, mientras +100 implica un juego mas
@@ -35,13 +52,18 @@ Partida.crearPerfil()
 # es una caracteristica que aleatoria que el humano no puede manipular.
 arrogancia = random.randint(-100, 100)
 
+
 if not Partida.tipo == 'apertura':
     ### Crea un Replicante
-    REPLICANTE = Stockfish(parameters={"Contempt": arrogancia, "MultiPV": 1})
+    REPLICANTE = Stockfish("/usr/games/stockfish", parameters={"Contempt": arrogancia, "MultiPV": 1})
     # Fija profundidad y habilidad segun eleccion del humano,
     # (cuando no es una perfil cargado)
-    REPLICANTE.set_depth(Partida.profundidad_analisis)
-    REPLICANTE.set_skill_level(Partida.habilidad)
+
+    REPLICANTE.set_depth(1)
+    REPLICANTE.set_skill_level(1)
+
+    #REPLICANTE.set_depth(Partida.profundidad_analisis)
+    #REPLICANTE.set_skill_level(Partida.habilidad)
 
     # Para desarrolladores
     print('[CPLs] Parametros de REPLICANTE:')
@@ -64,8 +86,16 @@ if Partida.tipo == 'blancas':
         # Ordena la informacion relevante sobre la partida
         # y la formatea para imprimirla en la LCD 84x48
         Partida.imprimirPartida()
-        # Espera y registra la jugada de humano
-        entrada = input().lower()
+
+        # Espera y registra la jugada de humano        
+        entrada = move.run()
+        log.append('Jugada: {:s}'.format(entrada))
+        lcd.update(log.render())
+        pyplot.pause(2)
+
+        print("Entrada: {} (tipo: {})".format(entrada, type(entrada)))
+
+        #entrada = input().lower()
 
         # Si la jugada es correcta:
         if (len(entrada) > 1) & (REPLICANTE.is_move_correct(entrada)):
