@@ -29,7 +29,7 @@ TYRELL = Tipos.Tyrell()
 
 ### Crea  partida
 Partida = Partida()
-# Partida.menuInicio()
+Partida.menuInicio()
 
 
 REPLICANTE = Tipos.Replicante(1, 12, verbose=True)

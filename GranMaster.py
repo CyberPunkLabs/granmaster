@@ -106,8 +106,8 @@ class Partida:
 
     ### Crear de inicio ###                
     def menuInicio(self):
-        lineas = ["(1) Nuevo", "(2) Cargar"]
-        opcion = self.imprimirGenerico(lineas)
+        lineas = ["Partida:", "Nuevo", "Cargar"]
+        opcion = self.imprimirGenerico(lineas, opciones=[1,2])
         print("Seleccion (inicio): {} (tipo: {})".format(opcion, type(opcion)))
 
         try:
@@ -134,14 +134,14 @@ class Partida:
     ### Menu de configuracion
     def menuConfiguracion(self):
         ### Color del jugador
-        lineas = ["Tipo:", "(1) Blancas", "(2) Negras", "(3) Aleatorio", "(4) Apertura", "(5) Rep vs Rep"]
-        opcion = self.imprimirGenerico(lineas, seleccion=True)
+        lineas = ["Tipo:", "Blancas", "Negras (no)", "Aleatorio (no)", "Apertura (no)", "Rep vs Rep (no)"]
+        opcion = self.imprimirGenerico(lineas, opciones=[1], seleccion=True)
         #print("Seleccion (juego): {} (opcion: {})".format(lineas(opcion), opcion))
         #opcion = input()
         try:
             opcion = int(opcion)
             
-            if opcion in [1, 2, 3]:
+            if opcion in [1]:
                 if opcion == 1:
                     Partida.tipo = 'blancas'
                     self.color = 'blancas'
@@ -168,13 +168,13 @@ class Partida:
 
     ### Inteligencia UCI: Habilidad replicante. Stockfish.set_skill_level [0, 20]
     def menuHabilidad(self):
-        lineas = ["Habilidad Replicante:", "(1-20)"]
-        opcion = self.imprimirGenerico(lineas)
+        lineas = ["Habilidad", "Replicante:", "1", "2"]
+        opcion = self.imprimirGenerico(lineas, opciones=[2,3])
 
         try:
             self.habilidad = int(opcion)
             if (self.habilidad >= 1) & (self.habilidad <= 20):
-                lineas = ['Replicante', 'Habilidad: {}.'.format(self.habilidad)]
+                lineas = ['Replicante', 'Habilidad: {}.'.format(self.habilidad-1)]
                 self.imprimirGenerico(lineas, seleccion=False)
             else:
                 lineas = ['Opcion', 'incorrecta!']
@@ -189,14 +189,14 @@ class Partida:
 
     ### Profundidad de analisis (numero de iteraciones efectuadas por Replicante)
     def menuProfundidad(self):
-        lineas = ["Profundidad análisis", "(1-40)"]
-        opcion = self.imprimirGenerico(lineas)
+        lineas = ["Profundidad", "análisis", "1", "2"]
+        opcion = self.imprimirGenerico(lineas, opciones=[2,3])
 
         try:
             self.profundidad_analisis = int(opcion)
 
             if (self.profundidad_analisis >= 1) & (self.profundidad_analisis <= 40):
-                lineas = ['Replicante', 'Profundidad: {}.'.format(self.profundidad_analisis)]
+                lineas = ['Replicante', 'Profundidad: {}.'.format(self.profundidad_analisis-1)]
                 self.imprimirGenerico(lineas, seleccion=False)        
             else:
                 self.imprimirGenerico(['Opción incorrecta!'], seleccion=False)
@@ -214,7 +214,7 @@ class Partida:
     ### Maneja las opciones del juego
     def opciones(self):
         lineas = ["Análisis", "Deshacer", "Posición blancas", "Posición negras"]
-        entrada = self.imprimirGenerico(lineas, [0,1,2,3,4,5])
+        entrada = self.imprimirGenerico(lineas)
 
         print("Entrada: {}".format(entrada))
 
@@ -304,11 +304,12 @@ class Partida:
             linea5 = "Ingresa jugada..."
             linea6 = "Opciones"
             lineas = [linea1, linea2, linea3, linea4, linea5, linea6]
-            opcion = self.imprimirGenerico(lineas, [4, 5], seleccion=False)
+            opcion = self.imprimirGenerico(lineas, [4], seleccion=False)
 
-            if opcion == 5:
-                self.opciones()
-                
+            print("la opcion: {}".format(opcion))
+
+
+            return opcion
 
             
 
@@ -388,17 +389,22 @@ class Partida:
 
 ##################### FUNCIONES DE IMPRESION ######################
 
-    def imprimirLCD(self, lineas, opciones):
+    def imprimirLCD(self, lineas, opciones, move=False):
         print("Entrando a LCD")
-        #move = Move.Move(lcd, keyEvent, font)
-        menu = Menu.Menu(lcd, keyEvent, font, lineas, opciones, 0)
-        opcion = menu.run()
 
+        if move:
+            move = Move.Move(lcd, keyEvent, font)
+            opcion = move.run()
+        else:
+            menu = Menu.Menu(lcd, keyEvent, font, lineas, opciones, 0)
+            opcion = menu.run()
+
+        print("Opt: {}".format(opcion))
         return opcion
 
 
     ### Imprimir generico
-    def imprimirGenerico(self, lineas, opciones, seleccion=True, terminal=True, lcd=True):
+    def imprimirGenerico(self, lineas, opciones=[0,1,2,3,4,5], move=False, seleccion=True, terminal=True, lcd=True):
 
         if terminal:
             print("\n### PANTALLA DEL USUARIO ")
@@ -406,7 +412,7 @@ class Partida:
 
         if lcd:
             print("Salida: LCD")
-            opcion = self.imprimirLCD(lineas, opciones)
+            opcion = self.imprimirLCD(lineas, opciones, move)
             print("Opción: {}\nSaliendo de LCD...".format(opcion))
 
             return opcion
@@ -425,67 +431,5 @@ class Partida:
                 Partida.ultimas = Partida.variacion + ["*"] + ([" "] * (3 - len(Partida.variacion)))
             else:
                 Partida.ultimas = Partida.variacion[-3:] + ["*"]
-
-
-            
-            
-########################################################
-### OPCIONES SOLO PARA TERMINAL ###
-    def imprimirTablero(self):
-        TYRELL.set_position(Partida.variacion)
-        fen = TYRELL.get_fen_position()
-        tablero_fen = ""
-        unicode = Partida.diccionario_unicode
-        for pieza in fen:
-            if pieza in unicode.keys():
-                tablero_fen += unicode[pieza]
-            elif pieza == " ":
-                break
-            else:
-                tablero_fen += '\n'
-
-        print(tablero_fen)
-
-
-
-    def posicionTablero(self, color='b'):
-        coordenadas = ['a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8', 'h8',
-                       'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7',
-                       'a6', 'b6', 'c6', 'd6', 'e6', 'f6', 'g6', 'h6',
-                       'a5', 'b5', 'c5', 'd5', 'e5', 'f5', 'g5', 'h5',
-                       'a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4',
-                       'a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'h3',
-                       'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2',
-                       'a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1']
-
-        unicode = Partida.diccionario_unicode
-
-        TYRELL.set_position(Partida.variacion)
-        fen = TYRELL.get_fen_position()
-        fen = fen.split(' ')
-
-        tablero = []
-        for letra in fen[0]:
-            if letra in ["1", "2", "3", "4", "5", "6", "7", "8"]:
-                tablero.extend(["." for i in range(int(letra))])
-            elif letra == "/":
-                pass
-            else:
-                tablero.append(letra)
-
-        piezas = ['k', 'q', 'r', 'b', 'n', 'p']
-
-        if color == 'b':
-            piezas = [pieza.upper() for pieza in piezas]
-
-        for pieza in piezas:
-            posicion = []
-
-            for index in range(len(tablero)):
-                if tablero[index] == pieza:
-                    posicion.append(coordenadas[index])
-
-            print("{} {}".format(unicode[pieza], posicion))
-
 
 

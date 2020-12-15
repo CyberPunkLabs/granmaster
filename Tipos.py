@@ -49,14 +49,19 @@ def Replicante(habilidad, profundidad, verbose=False):
 
 def JugadaHumano(Partida, REPLICANTE):
     entrada = Partida.imprimirPartida()
-    #entrada = input().lower()
-    #print("Jugada humano: {}".format(entrada))
+
+    if entrada == 4:
+        entrada = Partida.imprimirGenerico("", move=True)
+        
+    
+    entrada = entrada.lower()
+    print("Jugada humano: {}".format(entrada))
 
     print("\nJugada humano")
     print("Jugada {} (movimiento {}; índice {})"\
           .format(Partida.n_jugada, Partida.n_movimiento+1,
                   Partida.n_movimiento))
-
+        
     return entrada
     
         
@@ -64,7 +69,10 @@ def JugadaReplicante(entrada, Partida, REPLICANTE):
     print("\nVerificando jugada {}..."\
           .format(entrada))
 
-    if (len(entrada) > 1) & (REPLICANTE.is_move_correct(entrada)):
+    print("Len entrada {}".format(len(entrada)))
+    print(REPLICANTE.is_move_correct(entrada))
+        
+    if REPLICANTE.is_move_correct(entrada):
         print("{} correcta !!".format(entrada))
 
         Partida.jugada_correcta = True
@@ -85,15 +93,13 @@ def JugadaReplicante(entrada, Partida, REPLICANTE):
         # Suma un movimiento (ej ... e7e5)
         Partida.n_movimiento += 1
 
-    elif entrada == 'o':
-        Partida.opciones(entrada)
         
     else:
         # Si la jugada no es correcta, lo desvia a la funcion "opciones"
         Partida.jugada_correcta = False
         lineas = ["{} Incorrecta !!".format(entrada)]
         Partida.imprimirGenerico(lineas, seleccion=False)
-        time.sleep(3)
+
 
 
     # if Partida.jugada_correcta:
