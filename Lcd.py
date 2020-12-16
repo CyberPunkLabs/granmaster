@@ -1,5 +1,5 @@
 import numpy
-import matplotlib.pyplot as pyplot
+import lcd5110
 
 
 try:
@@ -13,7 +13,8 @@ except (ImportError, RuntimeError):
 class Lcd:
     def __init__(self):
         if raspberryPi:
-            print('TODO!')
+            self.lcd5110 = LCD5110
+
         else:
             # [ERROR] Solucionado con xhost si:localuser:root            
             self.fig, self.ax = pyplot.subplots(1, 1)
@@ -25,7 +26,16 @@ class Lcd:
 
     def update(self, framebuffer):
         if raspberryPi:
-            print('TODO!')
+            image = numpy.array((84 * 48) >> 3, dtype = numpy.uint8)
+            
+            for i in range(framebuffer.buffer >> 3):
+                offset = i << 3
+                
+                for j in range(8):
+                    image = framebuffer.buffer[offset + j] << j
+
+            printImage(self, image)
+
         else:
             self.im.set_data(framebuffer.buffer.T)
             self.fig.canvas.draw_idle()

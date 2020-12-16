@@ -24,7 +24,10 @@ os.system("xhost si:localuser:root")
 # [ERROR] Solucionado con xhost si:localuser:root
 lcd = Lcd.Lcd()
 keyEvent = Keys.KeyEvent()
-font = Font.Font('FONTS/BIGPILE/SEEMORE/CM-6X6.F06')
+#font = Font.Font('FONTS\BIGPILE\SEEMORE\CM-5X8.F08')
+#font = Font.Font('FONTS\BIGPILE\SEEMORE\CM-6X8.F08')
+font = Font.Font('FONTS\Incomplete.F08')
+
 log = Log.Log(font)
 out_device = 'terminal'
 
