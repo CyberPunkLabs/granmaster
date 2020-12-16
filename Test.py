@@ -19,15 +19,14 @@ else:
 lcd = Lcd.Lcd()
 keyEvent = Keys.KeyEvent()
 
-font = Font.Font('FONTS/BIGPILE/SEEMORE/CM-6X8.F08')
+font = Font.Font('FONTS\Incomplete.F08')
 
 log = Log.Log(font)
 
 
-menuOptions = ['Jugar', 'Rendirse', 'Salir', 'Ayuda', '1', '2']
+menuRows = ['Elegir', '', 'Jugar', 'Rendirse', 'Salir', 'Ayuda']
 #move = Move.Move(lcd, keyEvent, font)
-menu = Menu.Menu(lcd, keyEvent, font, menuOptions, 2)
-
+menu = Menu.Menu(lcd, keyEvent, font, menuRows, [2, 3, 4, 5], 3)
 
 selection = menu.run()
 print(selection)

@@ -12,10 +12,10 @@ class Framebuffer:
         self.buffer = numpy.zeros((84, 48), dtype = numpy.int8)
 
 
-    def invert(self):
-        for x in range(84):
-            for y in range(48):
-                self.buffer[x, y] = pixel = int(not bool(self.buffer[x, y]))
+    def invert(self, x0, y0, x1, y1):
+        for x in numpy.arange(x0, x1 + 1):
+            for y in numpy.arange(y0, y1 + 1):
+                self.buffer[x, y] = int(not bool(self.buffer[x, y]))
 
 
     def write(self, xPosition, yPosition, font, text, inverse = False, xDelta = None, yDelta = None):

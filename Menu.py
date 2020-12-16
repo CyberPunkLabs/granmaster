@@ -7,11 +7,11 @@ import Keys
 
 
 class Menu:
-    def __init__(self, lcd, keyEvent, font, lines, options, selection, left = True):
+    def __init__(self, lcd, keyEvent, font, rows, options, selection, left = True):
         self.lcd = lcd
         self.keyEvent = keyEvent
         self.font = font
-        self.lines = lines
+        self.rows = rows
         self.options = options
         self.selection = selection
         
@@ -20,23 +20,18 @@ class Menu:
         if left:
             self.xDelta = 0 
         else:
-            self.xDelta = int((font.xCharacter - max([len(x) + 1 for x in lines])) / 2)
-        self.yDelta = int((font.yCharacter - len(self.lines)) / 2)
+            self.xDelta = int((font.xCharacter - max([len(x) + 1 for x in rows])) / 2)
+        self.yDelta = int((font.yCharacter - len(self.rows)) / 2)
 
 
     def run(self):
         while True:
             self.framebuffer.clear()
 
-            for i in range(len(self.lines)):
-                row = self.lines[i]
-
-                if self.selection == i:
-                    row = '>' + row
-                else:
-                    row = ' ' + row
-
-                self.framebuffer.write(self.xDelta, i + self.yDelta, self.font, row)
+            for i in range(len(self.rows)):
+                self.framebuffer.write(self.xDelta, i + self.yDelta, self.font, self.rows[i])
+            
+            self.framebuffer.invert(0, self.font.height * self.selection, 83, self.font.height * (self.selection + 1) - 1)
 
             while True:
                 pressed = self.keyEvent.get()
@@ -46,12 +41,18 @@ class Menu:
                     break
 
             if pressed == 'up':
-                self.selection -= 1
+                while True:    
+                    self.selection = (self.selection - 1) % len(self.rows)
+                    if self.selection in self.options:
+                        break
+
 
             if pressed == 'down':
-                self.selection += 1
+                while True:
+                    self.selection = (self.selection + 1) % len(self.rows)
+                    if self.selection in self.options:
+                        break
 
-            self.selection %= len(self.lines)
-
-            if (pressed == 'enter') & (self.selection in self.options):
+            if (pressed == 'enter'):
                 return self.selection
+

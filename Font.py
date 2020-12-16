@@ -22,7 +22,7 @@ class Font:
         self.xCharacter = int(84 / self.width)
         self.yCharacter = int(48 / self.height) 
 
-        self.buffer = numpy.zeros((256 * self.width, self.height), dtype = numpy.int8)
+        self.buffer = numpy.zeros((256 * self.width, self.height), dtype = numpy.uint8)
 
         for column in range(256):
             for y in range(self.height):
